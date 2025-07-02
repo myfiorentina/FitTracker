@@ -289,50 +289,6 @@ def elimina_pasto(index):
         flash("Indice pasto non valido.")
     return redirect(url_for("storico_pasti"))
 
-@app.route("/modifica_pasto/<int:index>", methods=["GET", "POST"])
-@login_required
-def modifica_pasto(index):
-    username = session["username"]
-    pasti = leggi_pasti_utente(username)
-
-    if not (0 <= index < len(pasti)):
-        flash("Indice pasto non valido.")
-        return redirect(url_for("storico_pasti"))
-
-    pasto = pasti[index]
-
-    if request.method == "POST":
-        tipo = request.form.get('tipo', '').strip()
-        descrizione = request.form.get('descrizione', '').strip()
-        data_ora = request.form.get('data_ora', '').strip()
-
-        if not valida_data_ora(data_ora):
-            flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
-            return redirect(request.url)
-
-        pasto['tipo'] = tipo
-        pasto['descrizione'] = descrizione
-        pasto['data_ora'] = data_ora
-
-        nuovi_pasti = []
-        try:
-            with open(PASTI_FILE, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.strip():
-                        p = json.loads(line)
-                        if p.get("utente") != username:
-                            nuovi_pasti.append(p)
-        except FileNotFoundError:
-            pass
-        nuovi_pasti.extend(pasti)
-        with open(PASTI_FILE, "w", encoding="utf-8") as f:
-            for p in nuovi_pasti:
-                f.write(json.dumps(p) + "\n")
-        flash("Pasto modificato correttamente.")
-        return redirect(url_for("storico_pasti"))
-
-    return render_template("modifica_pasto.html", pasto=pasto, index=index)
-
 # ======================
 # Route Pesate
 # ======================
