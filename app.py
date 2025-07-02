@@ -151,6 +151,7 @@ def login():
             session["eta"] = users[username]["eta"]
             session["peso_iniziale"] = users[username]["peso_iniziale"]
             session["altezza"] = users[username]["altezza"]
+            session["email"] = users[username].get("email", "")
             session["is_admin"] = users[username].get("admin", False)
             return redirect(url_for("home"))
         else:
@@ -595,6 +596,7 @@ def report_pesate():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
+        email = request.form.get("email", "").strip()
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         conferma_password = request.form.get("conferma_password", "")
@@ -605,8 +607,9 @@ def register():
         peso_iniziale = request.form.get("peso_iniziale", "")
         altezza = request.form.get("altezza", "")
 
-        logging.debug(f"DEBUG: username='{username}', password='{password}', conferma_password='{conferma_password}'")
+        logging.debug(f"DEBUG: username='{username}', password='{password}', conferma_password='{conferma_password}', email='{email}'")
 
+        # Controlli di base sui campi obbligatori
         if not username or not password or not conferma_password:
             flash("Username, password e conferma password sono obbligatori.")
             return redirect(request.url)
@@ -615,8 +618,13 @@ def register():
             flash("Le password non corrispondono.")
             return redirect(request.url)
 
-        if not nome or not cognome or not sesso or not eta or not peso_iniziale or not altezza:
-            flash("Compila tutti i campi obbligatori.")
+        if not nome or not cognome or not sesso or not eta or not peso_iniziale or not altezza or not email:
+            flash("Compila tutti i campi obbligatori, inclusa l'email.")
+            return redirect(request.url)
+
+        # Validazione base formato email (puoi usare regex più complesse se vuoi)
+        if "@" not in email or "." not in email:
+            flash("Inserisci un indirizzo email valido.")
             return redirect(request.url)
 
         try:
@@ -639,6 +647,7 @@ def register():
             "password": hashed_password,
             "nome": nome,
             "cognome": cognome,
+            "email": email,
             "sesso": sesso,
             "eta": eta,
             "peso_iniziale": peso_iniziale,
@@ -650,6 +659,7 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("register.html")
+
 
 @app.route("/profilo", methods=["GET", "POST"])
 @login_required
@@ -669,10 +679,12 @@ def profilo():
         eta = request.form.get("eta", "").strip()
         peso_iniziale = request.form.get("peso_iniziale", "").strip()
         altezza = request.form.get("altezza", "").strip()
+        email = request.form.get("email", "").strip()
 
         nuova_password = request.form.get("password", "").strip()
         conferma_password = request.form.get("conferma_password", "").strip()
 
+        # Validazioni base
         if nuova_password:
             if nuova_password != conferma_password:
                 flash("Le password non coincidono.")
@@ -680,8 +692,13 @@ def profilo():
             else:
                 user["password"] = generate_password_hash(nuova_password)
 
-        if not nome or not cognome or sesso not in ["M", "F", "O"]:
-            flash("Compila tutti i campi correttamente.")
+        if not nome or not cognome or sesso not in ["M", "F", "O"] or not email:
+            flash("Compila tutti i campi correttamente, compresa l'email.")
+            return redirect(request.url)
+
+        # Puoi aggiungere validazione semplice per email, es:
+        if "@" not in email or "." not in email:
+            flash("Inserisci un indirizzo email valido.")
             return redirect(request.url)
 
         try:
@@ -692,22 +709,29 @@ def profilo():
             flash("Età, peso e altezza devono essere numeri validi.")
             return redirect(request.url)
 
+        # Aggiorna dati utente
         user.update({
             "nome": nome,
             "cognome": cognome,
             "sesso": sesso,
             "eta": eta,
             "peso_iniziale": peso_iniziale,
-            "altezza": altezza
+            "altezza": altezza,
+            "email": email
         })
 
         users[username] = user
         save_users(users)
 
+        # Aggiorna session con nuova email
+        session["email"] = email
+
         flash("Profilo aggiornato con successo.")
         return redirect(url_for("profilo"))
 
+    # GET: passa user al template
     return render_template("profilo.html", user=user)
+
 
 
 @app.route("/cancella_account", methods=["POST"])
