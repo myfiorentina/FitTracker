@@ -13,6 +13,9 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
+# Copia specifica della cartella data
+COPY data /data
+
 EXPOSE 8080
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]

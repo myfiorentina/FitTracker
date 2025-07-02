@@ -1,0 +1,12 @@
+{
+  "myfiorentina": {
+    "password": "scrypt:32768:8:1$9dCVOfPb85mzUF7O$c5020131d124626bb38449f72529ae917dfc75f41eafbdf4588bec30d1ea0af264d867e101752edec81d96535e5ab260a1e355662d905a925bdcecbb8e0cde78",
+    "nome": "Andrea",
+    "cognome": "Magazzu",
+    "sesso": "M",
+    "eta": 42,
+    "peso_iniziale": 106.0,
+    "altezza": 175,
+    "admin": true
+  }
+}
