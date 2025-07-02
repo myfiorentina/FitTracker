@@ -137,30 +137,25 @@ def admin_required(f):
 @app.route("/")
 @login_required
 def home():
-    return render_template("home.html", username=session["username"])
+    username = session["username"]
+    ultimo_pasto = None
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"].strip()
-        password = request.form["password"]
-        users = load_users()
+    try:
+        with open(PASTI_FILE, "r", encoding="utf-8") as f:
+            righe = f.readlines()
+            pasti_utente = [json.loads(r) for r in righe if json.loads(r)["utente"] == username]
+            if pasti_utente:
+                # Ordina per data_ora nel formato italiano
+                ultimi = sorted(
+                    pasti_utente,
+                    key=lambda x: datetime.strptime(x["data_ora"], "%d/%m/%Y - %H:%M"),
+                    reverse=True
+                )
+                ultimo_pasto = ultimi[0]
+    except Exception as e:
+        logging.error(f"Errore lettura ultimo pasto: {e}")
 
-        if username in users and check_password_hash(users[username]["password"], password):
-            session["username"] = username
-            # Salva anche dati base in session
-            session["nome"] = users[username]["nome"]
-            session["cognome"] = users[username]["cognome"]
-            session["sesso"] = users[username]["sesso"]
-            session["eta"] = users[username]["eta"]
-            session["peso_iniziale"] = users[username]["peso_iniziale"]
-            session["altezza"] = users[username]["altezza"]
-            session["email"] = users[username].get("email", "")
-            session["is_admin"] = users[username].get("admin", False)
-            return redirect(url_for("home"))
-        else:
-            flash("Credenziali non valide.")
-    return render_template("login.html")
+    return render_template("home.html", username=username, ultimo_pasto=ultimo_pasto)
 
 @app.route("/logout")
 def logout():
@@ -667,6 +662,144 @@ def report_pesate():
                            pesate_data=pesate_data,
                            start_date=start_date,
                            end_date=end_date)
+
+@app.route("/analisi_pasti", methods=["GET", "POST"])
+@login_required
+def analisi_pasti():
+    username = session["username"]
+    oggi = datetime.now().date()
+    default_start = oggi - timedelta(days=30)
+
+    start_date = request.args.get("start_date", default_start.strftime("%Y-%m-%d"))
+    end_date = request.args.get("end_date", oggi.strftime("%Y-%m-%d"))
+
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Formato data non valido.")
+        return redirect(url_for("analisi_pasti"))
+
+    date, calorie, proteine, carboidrati, grassi = aggrega_pasti_per_giorno(username, start_dt, end_dt)
+
+    # Prepara descrizione per Gemini
+    descrizione_periodo = ""
+    for i in range(len(date)):
+        descrizione_periodo += (
+            f"{date[i]}: {calorie[i]} kcal, {proteine[i]}g proteine, "
+            f"{carboidrati[i]}g carboidrati, {grassi[i]}g grassi.\n"
+        )
+
+    prompt = (
+        "Agisci come un nutrizionista esperto in piani alimentari per dimagrimento. "
+        "Fornisci un commento obiettivo e motivante sull’andamento della dieta per questo periodo:\n"
+        f"{descrizione_periodo}\n"
+        "Valuta se l’apporto calorico è coerente con una dieta ipocalorica per perdere peso. "
+        "Commenta l’equilibrio tra macronutrienti (proteine, carboidrati, grassi) "
+        "e dai consigli se opportuno. Usa tono incoraggiante e sintetico."
+    )
+
+    # Chiamata a Gemini
+    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    response = requests.post(gemini_url, json=payload)
+
+    commento = "Commento non disponibile."
+    if response.status_code == 200:
+        try:
+            output = response.json()
+            commento = output["candidates"][0]["content"]["parts"][0]["text"]
+        except Exception as e:
+            logging.error(f"Errore parsing Gemini: {e}")
+            commento = "Errore nell’analisi automatica dei dati."
+    else:
+        logging.error(f"Errore chiamata Gemini: {response.status_code}")
+
+    return render_template("analisi_pasti.html",
+                           date_labels=date,
+                           calorie=calorie,
+                           proteine=proteine,
+                           carboidrati=carboidrati,
+                           grassi=grassi,
+                           start_date=start_date,
+                           end_date=end_date,
+                           commento=commento)
+
+@app.route("/analisi_pesature", methods=["GET", "POST"])
+@login_required
+def analisi_pesature():
+    username = session["username"]
+
+    oggi = datetime.now().date()
+    default_start = oggi - timedelta(days=30)
+
+    if request.method == "POST":
+        start_date = request.form.get("start_date", default_start.strftime("%Y-%m-%d"))
+        end_date = request.form.get("end_date", oggi.strftime("%Y-%m-%d"))
+    else:
+        start_date = request.args.get("start_date", default_start.strftime("%Y-%m-%d"))
+        end_date = request.args.get("end_date", oggi.strftime("%Y-%m-%d"))
+
+    start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+    end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+    pesate = leggi_pesate_utente(username)
+    filtered = [p for p in pesate if start_dt <= datetime.strptime(p["data_ora"], "%d/%m/%Y - %H:%M").date() <= end_dt]
+
+    labels = sorted(set(datetime.strptime(p["data_ora"], "%d/%m/%Y - %H:%M").strftime("%d/%m/%Y") for p in filtered))
+    campi = ["peso", "bmi", "grasso_corporeo", "grasso_sottocutaneo", "grasso_viscerale", "muscolo_scheletrico",
+             "peso_senza_grassi", "acqua_corporea", "massa_muscolare", "massa_ossea", "proteine", "bmr", "eta_metabolica"]
+
+    pesate_data = {campo: [] for campo in campi}
+
+    for label in labels:
+        giorno_pesate = [p for p in filtered if datetime.strptime(p["data_ora"], "%d/%m/%Y - %H:%M").strftime("%d/%m/%Y") == label]
+        for campo in campi:
+            valori = [p.get(campo, 0) for p in giorno_pesate if p.get(campo) is not None]
+            media = sum(valori) / len(valori) if valori else None
+            pesate_data[campo].append(round(media, 2) if media is not None else None)
+
+    date_objs = [datetime.strptime(d, "%d/%m/%Y") for d in labels]
+    zipped_data = sorted(zip(date_objs, *(pesate_data[c] for c in campi)))
+    labels = [z.strftime("%d/%m/%Y") for z in [item[0] for item in zipped_data]]
+    for i, campo in enumerate(campi):
+        pesate_data[campo] = [item[i + 1] for item in zipped_data]
+
+    # ===== COMMENTO PERSONALIZZATO =====
+    riassunto = ""
+    for i, giorno in enumerate(labels):
+        if pesate_data["peso"][i] is not None:
+            riassunto += f"{giorno}: peso {pesate_data['peso'][i]}kg, grasso {pesate_data['grasso_corporeo'][i]}%, muscolo {pesate_data['muscolo_scheletrico'][i]}%, acqua {pesate_data['acqua_corporea'][i]}%\n"
+
+    prompt = (
+        "Agisci come un nutrizionista esperto in composizione corporea. Analizza l’andamento "
+        "di peso, grasso corporeo, muscolo e idratazione nel seguente intervallo:\n"
+        f"{riassunto}\n"
+        "Commenta se ci sono miglioramenti coerenti con un obiettivo di dimagrimento sano. "
+        "Evidenzia eventuali oscillazioni anomale o segnali positivi. Dai consigli sintetici."
+    )
+
+    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    response = requests.post(gemini_url, json=payload)
+
+    commento = "Commento non disponibile."
+    if response.status_code == 200:
+        try:
+            output = response.json()
+            commento = output["candidates"][0]["content"]["parts"][0]["text"]
+        except Exception as e:
+            logging.error(f"Errore parsing Gemini: {e}")
+    else:
+        logging.error(f"Errore chiamata Gemini: {response.status_code}")
+
+    return render_template("analisi_pesature.html",
+                           labels=labels,
+                           pesate_data=pesate_data,
+                           start_date=start_date,
+                           end_date=end_date,
+                           commento=commento)
+
 
 # ======================
 # Route Registrazione e Profilo

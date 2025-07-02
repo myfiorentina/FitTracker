@@ -17,6 +17,8 @@
   <a href="{{ url_for('storico_pesate') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📊 Storico Pesate</a>
   <a href="{{ url_for('report_pasti') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📈 Report Pasti</a>
   <a href="{{ url_for('report_pesate') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📉 Report Pesate</a>
+  <a href="{{ url_for('analisi_pasti') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📋 Analisi Pasti</a>
+  <a href="{{ url_for('analisi_pesature') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">⚖️ Analisi Pesature</a>
   <a href="{{ url_for('profilo') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">👤 Profilo</a>
 
   {% if session.get('is_admin') %}

@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="text-xl font-bold mb-4">⚖️ Analisi Pesature ({{ start_date }} → {{ end_date }})</h2>
+
+<canvas id="grafico" width="400" height="200"></canvas>
+
+<div class="mt-6 p-4 bg-green-50 border-l-4 border-green-600 shadow rounded">
+  <h3 class="font-semibold text-lg text-green-800">Commento Nutrizione e Composizione Corporea</h3>
+  <p class="mt-2 whitespace-pre-line">{{ commento }}</p>
+</div>
+
+<form method="post" class="mt-6">
+  <label for="start_date">Dal:</label>
+  <input type="date" name="start_date" value="{{ start_date }}">
+  <label for="end_date">Al:</label>
+  <input type="date" name="end_date" value="{{ end_date }}">
+  <button type="submit" class="ml-2 px-4 py-2 bg-green-600 text-white rounded">Aggiorna</button>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById("grafico").getContext("2d");
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: {{ labels|tojson }},
+      datasets: [
+        {
+          label: "Peso (kg)",
+          data: {{ pesate_data['peso']|tojson }},
+          borderWidth: 2
+        },
+        {
+          label: "Grasso (%)",
+          data: {{ pesate_data['grasso_corporeo']|tojson }},
+          borderWidth: 2
+        },
+        {
+          label: "Muscolo (%)",
+          data: {{ pesate_data['muscolo_scheletrico']|tojson }},
+          borderWidth: 2
+        },
+        {
+          label: "Acqua (%)",
+          data: {{ pesate_data['acqua_corporea']|tojson }},
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="text-xl font-bold mb-4">📋 Analisi Pasti ({{ start_date }} → {{ end_date }})</h2>
+
+<canvas id="grafico" width="400" height="200"></canvas>
+
+<div class="mt-6 p-4 bg-blue-50 border-l-4 border-blue-600 shadow rounded">
+  <h3 class="font-semibold text-lg text-blue-800">Commento Nutrizionale</h3>
+  <p class="mt-2 whitespace-pre-line">{{ commento }}</p>
+</div>
+
+<form method="get" class="mt-6">
+  <label for="start_date">Dal:</label>
+  <input type="date" name="start_date" value="{{ start_date }}">
+  <label for="end_date">Al:</label>
+  <input type="date" name="end_date" value="{{ end_date }}">
+  <button type="submit" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded">Aggiorna</button>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById("grafico").getContext("2d");
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: {{ date_labels|tojson }},
+      datasets: [
+        {
+          label: "Calorie",
+          data: {{ calorie|tojson }},
+          borderWidth: 2
+        },
+        {
+          label: "Proteine (g)",
+          data: {{ proteine|tojson }},
+          borderWidth: 2
+        },
+        {
+          label: "Carboidrati (g)",
+          data: {{ carboidrati|tojson }},
+          borderWidth: 2
+        },
+        {
+          label: "Grassi (g)",
+          data: {{ grassi|tojson }},
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
