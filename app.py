@@ -3,6 +3,7 @@ import re
 import json
 import requests
 import os
+import pytz
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
@@ -177,6 +178,7 @@ def inserisci_pasto():
     if request.method == "POST":
         tipo = request.form.get('tipo', '').strip()
         descrizione = request.form.get('descrizione', '').strip()
+        italy = pytz.timezone("Europe/Rome")
         data_ora = request.form.get('data_ora', '').strip()
         username = session['username']
 
@@ -301,6 +303,7 @@ def modifica_pasto(index):
     if request.method == "POST":
         tipo = request.form.get('tipo', '').strip()
         descrizione = request.form.get('descrizione', '').strip()
+        italy = pytz.timezone("Europe/Rome")
         data_ora = request.form.get('data_ora', '').strip()
 
         if not valida_data_ora(data_ora):
@@ -463,6 +466,7 @@ def inserisci_pesata():
     username = session["username"]
 
     if request.method == "POST":
+        italy = pytz.timezone("Europe/Rome")
         data_ora = request.form.get("data_ora", "").strip()
 
         if not valida_data_ora(data_ora):
