@@ -1,0 +1,21 @@
+{
+  "myfiorentina": {
+    "password": "scrypt:32768:8:1$9dCVOfPb85mzUF7O$c5020131d124626bb38449f72529ae917dfc75f41eafbdf4588bec30d1ea0af264d867e101752edec81d96535e5ab260a1e355662d905a925bdcecbb8e0cde78",
+    "nome": "Andrea",
+    "cognome": "Magazzu",
+    "sesso": "M",
+    "eta": 42,
+    "peso_iniziale": 106.0,
+    "altezza": 175,
+    "admin": true
+  },
+  "fra": {
+    "password": "scrypt:32768:8:1$mWFlzL8Ta1feu1Hx$91b8a29ea901172948341b5989e96b9307d6fcaa0b54c23bdf5a834af812e311b47f3843f46480adb6144bd0a7d6a1452e09c2ab8678e6f050d1fddf6fab17f2",
+    "nome": "Francesca",
+    "cognome": "Baldone",
+    "sesso": "F",
+    "eta": 30,
+    "peso_iniziale": 60.0,
+    "altezza": 177
+  }
+}

@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">Benvenuto, {{ username }}!</h2>
+<p>Qui potrai gestire i tuoi pasti e le pesate giornaliere.</p>
+
+<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <a href="{{ url_for('inserisci_pasto') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📋 Inserisci Pasto</a>
+  <a href="{{ url_for('storico_pasti') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📖 Storico Pasti</a>
+  <a href="{{ url_for('inserisci_pesata') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">⚖️ Inserisci Pesata</a>
+  <a href="{{ url_for('storico_pesate') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📊 Storico Pesate</a>
+  <a href="{{ url_for('report_pasti') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📈 Report Pasti</a>
+  <a href="{{ url_for('report_pesate') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📉 Report Pesate</a>
+  <a href="{{ url_for('profilo') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">👤 Profilo</a>
+
+  {% if session.get('is_admin') %}
+  <a href="{{ url_for('admin_utenti') }}" class="block bg-red-600 text-white p-4 rounded shadow hover:bg-red-700">🛠️ Gestione Utenti (Admin)</a>
+  {% endif %}
+</div>
+{% endblock %}

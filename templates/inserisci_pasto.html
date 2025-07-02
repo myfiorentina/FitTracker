@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">Inserisci un Pasto</h2>
+<form method="post" class="bg-white shadow rounded p-6 max-w-xl">
+  <label class="block mb-4">Tipo di pasto:
+    <select name="tipo" class="border p-2 w-full rounded mt-1" required>
+      <option>Colazione</option>
+      <option>Spuntino Mattutino</option>
+      <option>Pranzo</option>
+      <option>Spuntino Pomeridiano</option>
+      <option>Cena</option>
+      <option>Extra</option>
+    </select>
+  </label>
+
+  <label class="block mb-4">Data e ora:
+    <input type="text" name="data_ora" value="{{ default_ora }}" class="border p-2 w-full rounded mt-1" required>
+    <small class="text-gray-500">Formato richiesto: gg/mm/aaaa - hh:mm</small>
+  </label>
+
+  <label class="block mb-4">Descrizione del pasto:
+    <textarea name="descrizione" rows="3" class="border p-2 w-full rounded mt-1" required></textarea>
+  </label>
+
+  <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Salva Pasto</button>
+</form>
+{% endblock %}

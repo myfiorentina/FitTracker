@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">Report Pesate Giornalieri</h2>
+
+<form method="POST" class="mb-6 flex flex-wrap items-center gap-4">
+  <label class="flex flex-col">
+    Data inizio:
+    <input type="date" name="start_date" value="{{ start_date }}" class="border rounded px-2 py-1">
+  </label>
+  <label class="flex flex-col">
+    Data fine:
+    <input type="date" name="end_date" value="{{ end_date }}" class="border rounded px-2 py-1">
+  </label>
+  <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Filtra</button>
+</form>
+
+<div class="grid-container">
+  {% for campo, dati in pesate_data.items() %}
+  <div class="grid-item">
+    <h3 class="font-semibold mb-2">{{ campo.replace('_', ' ').title() }}</h3>
+    <canvas id="{{ campo }}Chart"></canvas>
+  </div>
+  {% endfor %}
+</div>
+
+<style>
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  .grid-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgb(0 0 0 / 0.1);
+  }
+  canvas {
+    width: 100% !important;
+    height: 250px !important;
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const labels = {{ labels|tojson }};
+  const pesateData = {{ pesate_data|tojson }};
+
+  // Array colori per differenziare grafici
+  const colors = [
+    'rgba(75, 192, 192, 1)', 
+    'rgba(255, 99, 132, 1)', 
+    'rgba(54, 162, 235, 1)', 
+    'rgba(255, 206, 86, 1)', 
+    'rgba(153, 102, 255, 1)', 
+    'rgba(255, 159, 64, 1)', 
+    'rgba(199, 199, 199, 1)'
+  ];
+
+  let colorIndex = 0;
+
+  for (const campo in pesateData) {
+    const ctx = document.getElementById(campo + 'Chart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: campo.replace(/_/g, ' ').toUpperCase(),
+          data: pesateData[campo],
+          borderColor: colors[colorIndex % colors.length],
+          backgroundColor: colors[colorIndex % colors.length].replace('1)', '0.2)'),
+          fill: true,
+          tension: 0.2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'nearest',
+          intersect: false
+        },
+        plugins: {
+          tooltip: {
+            enabled: true
+          },
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              font: {
+                size: 12
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Data'
+            }
+          },
+          y: {
+            beginAtZero: false,
+            grace: '5%',
+            title: {
+              display: true,
+              text: 'Valore'
+            }
+          }
+        }
+      }
+    });
+    colorIndex++;
+  }
+</script>
+{% endblock %}

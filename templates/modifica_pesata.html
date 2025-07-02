@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">Modifica Pesata</h2>
+<form method="post" class="bg-white shadow rounded p-6 max-w-xl space-y-4">
+  <label class="block">
+    Data e ora:
+    <input type="text" name="data_ora" value="{{ pesata.data_ora }}" required class="border p-2 w-full rounded mt-1"/>
+    <small class="text-gray-500">Formato: gg/mm/aaaa - hh:mm</small>
+  </label>
+
+  <label class="block">
+    Peso (kg):
+    <input type="number" step="0.01" name="peso" value="{{ pesata.peso }}" required class="border p-2 w-full rounded mt-1"/>
+  </label>
+
+  <label class="block">
+    BMI:
+    <input type="number" step="0.01" name="bmi" value="{{ pesata.bmi }}" required class="border p-2 w-full rounded mt-1"/>
+  </label>
+
+  <label class="block">
+    Grasso corporeo (%):
+    <input type="number" step="0.01" name="grasso_corporeo" value="{{ pesata.grasso_corporeo }}" required class="border p-2 w-full rounded mt-1"/>
+  </label>
+
+  <label class="block">
+    Muscolo scheletrico (%):
+    <input type="number" step="0.01" name="muscolo_scheletrico" value="{{ pesata.muscolo_scheletrico }}" required class="border p-2 w-full rounded mt-1"/>
+  </label>
+
+  <label class="block">
+    Massa muscolare (kg):
+    <input type="number" step="0.01" name="massa_muscolare" value="{{ pesata.massa_muscolare }}" required class="border p-2 w-full rounded mt-1"/>
+  </label>
+
+  <label class="block">
+    Acqua corporea (%):
+    <input type="number" step="0.01" name="acqua_corporea" value="{{ pesata.acqua_corporea }}" required class="border p-2 w-full rounded mt-1"/>
+  </label>
+
+  <label class="block">
+    BMR (kcal):
+    <input type="number" step="1" name="bmr" value="{{ pesata.bmr }}" required class="border p-2 w-full rounded mt-1"/>
+  </label>
+
+  <label class="block">
+    Età metabolica:
+    <input type="number" step="1" name="eta_metabolica" value="{{ pesata.eta_metabolica }}" required class="border p-2 w-full rounded mt-1"/>
+  </label>
+
+  <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Salva Modifiche</button>
+</form>
+{% endblock %}

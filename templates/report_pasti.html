@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Report Pasti Giornalieri</h2>
+
+<!-- Form per selezione intervallo date -->
+<form method="get" action="{{ url_for('report_pasti') }}" class="mb-6 flex flex-wrap items-center gap-4">
+  <label for="start_date" class="font-semibold">Da:</label>
+  <input type="date" id="start_date" name="start_date" value="{{ start_date }}" required
+         class="border border-gray-300 rounded px-2 py-1">
+  
+  <label for="end_date" class="font-semibold">A:</label>
+  <input type="date" id="end_date" name="end_date" value="{{ end_date }}" required
+         class="border border-gray-300 rounded px-2 py-1">
+  
+  <button type="submit" 
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+    Mostra
+  </button>
+</form>
+
+<!-- Canvas grafico -->
+<canvas id="chartPasti" style="max-width: 700px; max-height: 400px;"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('chartPasti').getContext('2d');
+
+const data = {
+  labels: {{ date_labels|tojson }},
+  datasets: [
+    {
+      label: 'Calorie',
+      data: {{ calorie|tojson }},
+      type: 'line',
+      borderColor: 'rgba(255, 99, 132, 1)',
+      backgroundColor: 'rgba(255, 99, 132, 0.2)',
+      yAxisID: 'y',
+      fill: false,
+      tension: 0.1,
+    },
+    {
+      label: 'Proteine (g)',
+      data: {{ proteine|tojson }},
+      backgroundColor: 'rgba(54, 162, 235, 0.7)',
+      type: 'bar',
+      yAxisID: 'y1',
+    },
+    {
+      label: 'Carboidrati (g)',
+      data: {{ carboidrati|tojson }},
+      backgroundColor: 'rgba(255, 206, 86, 0.7)',
+      type: 'bar',
+      yAxisID: 'y1',
+    },
+    {
+      label: 'Grassi (g)',
+      data: {{ grassi|tojson }},
+      backgroundColor: 'rgba(75, 192, 192, 0.7)',
+      type: 'bar',
+      yAxisID: 'y1',
+    }
+  ]
+};
+
+const config = {
+  data: data,
+  options: {
+    responsive: true,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    stacked: false,
+    scales: {
+      y: {
+        type: 'linear',
+        position: 'left',
+        title: {
+          display: true,
+          text: 'Calorie',
+        },
+        beginAtZero: true,
+      },
+      y1: {
+        type: 'linear',
+        position: 'right',
+        title: {
+          display: true,
+          text: 'Grammi',
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+        beginAtZero: true,
+      }
+    }
+  },
+};
+
+const myChart = new Chart(ctx, config);
+</script>
+{% endblock %}

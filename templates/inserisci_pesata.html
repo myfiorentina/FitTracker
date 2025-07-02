@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+  form {
+    max-width: 700px;
+    margin: 20px auto;
+    background: #f9fafb;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+  }
+  .grid-item {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 15px;
+    text-align: center;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #555;
+  }
+  input[type="text"],
+  input[type="number"] {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+  button {
+    display: block;
+    width: 100%;
+    margin-top: 25px;
+    padding: 12px;
+    font-size: 1.1rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #357ab8;
+  }
+  .link-home {
+    display: block;
+    margin-top: 15px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+</style>
+
+<h2>Inserisci Pesata Manuale</h2>
+<form method="POST" novalidate>
+  <label for="data_ora">Data e ora (gg/mm/aaaa - hh:mm):</label>
+  <input
+    type="text"
+    id="data_ora"
+    name="data_ora"
+    value="{{ dati.data_ora if dati and dati.data_ora else default_ora }}"
+    required
+    placeholder="02/07/2025 - 08:56"
+    pattern="^\d{2}/\d{2}/\d{4} - \d{2}:\d{2}$"
+  >
+
+  <div class="grid-container">
+    {% set fields = [
+      ("peso", "Peso (kg)", 0.1),
+      ("bmi", "BMI", 0.1),
+      ("grasso_corporeo", "Grasso corporeo (%)", 0.1),
+      ("muscolo_scheletrico", "Muscolo scheletrico (%)", 0.1),
+      ("peso_senza_grassi", "Peso corporeo senza grassi (kg)", 0.01),
+      ("grasso_sottocutaneo", "Grasso sottocutaneo (%)", 0.1),
+      ("grasso_viscerale", "Grasso viscerale", 1),
+      ("acqua_corporea", "Acqua corporea (%)", 0.1),
+      ("massa_muscolare", "Massa muscolare (kg)", 0.1),
+      ("massa_ossea", "Massa ossea (kg)", 0.01),
+      ("proteine", "Proteine (%)", 0.1),
+      ("bmr", "BMR (kcal)", 1),
+      ("eta_metabolica", "Età metabolica", 1)
+    ] %}
+    
+    {% for name, label, step in fields %}
+    <div class="grid-item">
+      <label for="{{ name }}">{{ label }}:</label>
+      <input
+        type="number"
+        id="{{ name }}"
+        name="{{ name }}"
+        step="{{ step }}"
+        required
+        value="{{ dati[name] if dati and name in dati else '' }}"
+      >
+    </div>
+    {% endfor %}
+  </div>
+
+  <button type="submit">Salva Pesata</button>
+</form>
+
+<a href="{{ url_for('home') }}" class="link-home">Torna alla Home</a>
+{% endblock %}
