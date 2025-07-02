@@ -298,37 +298,37 @@ def modifica_pasto(index):
 
     pasto = pasti[index]
 
-if request.method == "POST":
-    tipo = request.form.get('tipo', '').strip()
-    descrizione = request.form.get('descrizione', '').strip()
-    data_ora = request.form.get('data_ora', '').strip()
+    if request.method == "POST":
+        tipo = request.form.get('tipo', '').strip()
+        descrizione = request.form.get('descrizione', '').strip()
+        data_ora = request.form.get('data_ora', '').strip()
 
-    if not valida_data_ora(data_ora):
-        flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
-        return redirect(request.url)
+        if not valida_data_ora(data_ora):
+            flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
+            return redirect(request.url)
 
-    pasto['tipo'] = tipo
-    pasto['descrizione'] = descrizione
-    pasto['data_ora'] = data_ora
+        pasto['tipo'] = tipo
+        pasto['descrizione'] = descrizione
+        pasto['data_ora'] = data_ora
 
-    nuovi_pasti = []
-    try:
-        with open(PASTI_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.strip():
-                    p = json.loads(line)
-                    if p.get("utente") != username:
-                        nuovi_pasti.append(p)
-    except FileNotFoundError:
-        pass
-    nuovi_pasti.extend(pasti)
-    with open(PASTI_FILE, "w", encoding="utf-8") as f:
-        for p in nuovi_pasti:
-            f.write(json.dumps(p) + "\n")
-    flash("Pasto modificato correttamente.")
-    return redirect(url_for("storico_pasti"))
+        nuovi_pasti = []
+        try:
+            with open(PASTI_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        p = json.loads(line)
+                        if p.get("utente") != username:
+                            nuovi_pasti.append(p)
+        except FileNotFoundError:
+            pass
+        nuovi_pasti.extend(pasti)
+        with open(PASTI_FILE, "w", encoding="utf-8") as f:
+            for p in nuovi_pasti:
+                f.write(json.dumps(p) + "\n")
+        flash("Pasto modificato correttamente.")
+        return redirect(url_for("storico_pasti"))
 
-return render_template("modifica_pasto.html", pasto=pasto, index=index)
+    return render_template("modifica_pasto.html", pasto=pasto, index=index)
 
 # ======================
 # Route Pesate
@@ -442,39 +442,40 @@ def inserisci_pesata():
 
         dati_pesata = {"utente": username, "data_ora": data_ora}
 
-for campo in campi_float:
-    valore = request.form.get(campo, "").strip()
-    try:
-        dati_pesata[campo] = float(valore)
-    except ValueError:
-        flash(f"Valore non valido per {campo}. Inserisci un numero corretto.")
-        return redirect(request.url)
+        for campo in campi_float:
+            valore = request.form.get(campo, "").strip()
+            try:
+                dati_pesata[campo] = float(valore)
+            except ValueError:
+                flash(f"Valore non valido per {campo}. Inserisci un numero corretto.")
+                return redirect(request.url)
 
-for campo in campi_int:
-    valore = request.form.get(campo, "").strip()
-    try:
-        dati_pesata[campo] = int(valore)
-    except ValueError:
-        flash(f"Valore non valido per {campo}. Inserisci un numero intero corretto.")
-        return redirect(request.url)
+        for campo in campi_int:
+            valore = request.form.get(campo, "").strip()
+            try:
+                dati_pesata[campo] = int(valore)
+            except ValueError:
+                flash(f"Valore non valido per {campo}. Inserisci un numero intero corretto.")
+                return redirect(request.url)
 
-try:
-    with open(PESATE_FILE, "a", encoding="utf-8") as f:
-        f.write(json.dumps(dati_pesata) + "\n")
-    flash("Pesata salvata correttamente.")
-except Exception as e:
-    logging.error(f"Errore salvataggio pesata: {e}")
-    flash("Errore nel salvataggio della pesata.")
+        try:
+            with open(PESATE_FILE, "a", encoding="utf-8") as f:
+                f.write(json.dumps(dati_pesata) + "\n")
+            flash("Pesata salvata correttamente.")
+        except Exception as e:
+            logging.error(f"Errore salvataggio pesata: {e}")
+            flash("Errore nel salvataggio della pesata.")
 
-return redirect(url_for("home"))
+        return redirect(url_for("home"))
 
-pesate = leggi_pesate_utente(username)
-dati_precompilati = {}
-if pesate:
-    dati_precompilati = pesate[0].copy()
-    dati_precompilati["data_ora"] = datetime.now().strftime("%d/%m/%Y - %H:%M")
+    pesate = leggi_pesate_utente(username)
+    dati_precompilati = {}
+    if pesate:
+        dati_precompilati = pesate[0].copy()
+        dati_precompilati["data_ora"] = datetime.now().strftime("%d/%m/%Y - %H:%M")
 
-return render_template("inserisci_pesata.html", default_ora=datetime.now().strftime("%d/%m/%Y - %H:%M"), dati=dati_precompilati)
+    return render_template("inserisci_pesata.html", default_ora=datetime.now().strftime("%d/%m/%Y - %H:%M"), dati=dati_precompilati)
+
 
 # ======================
 # Route Report
