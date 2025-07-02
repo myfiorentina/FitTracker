@@ -171,6 +171,121 @@ def logout():
 # Route Pasti
 # ======================
 
+@app.route("/inserisci_pasto", methods=["GET", "POST"])
+@login_required
+def inserisci_pasto():
+    if request.method == "POST":
+        tipo = request.form.get('tipo', '').strip()
+        descrizione = request.form.get('descrizione', '').strip()
+        data_ora = request.form.get('data_ora', '').strip()
+        username = session['username']
+
+        if not valida_data_ora(data_ora):
+            flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
+            return redirect(request.url)
+
+        # Chiamata API Gemini
+        gemini_api_key = "AIzaSyAJ_U8NMEJAr7sk24uqjzJdOrxD9meFMr0"
+        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_api_key}"
+
+        prompt = (
+            f"Fornisci solo un oggetto JSON con i seguenti campi: "
+            f"calorie (in kcal), proteine (in grammi), carboidrati (in grammi), grassi (in grammi). "
+            f"Esempio: {{\"calorie\": 250, \"proteine\": 10, \"carboidrati\": 20, \"grassi\": 5}}. "
+            f"Descrizione del pasto: {descrizione}"
+        )
+
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+
+        logging.debug(f"Chiamata Gemini URL: {gemini_url}")
+        logging.debug(f"Payload inviato a Gemini: {json.dumps(payload)}")
+
+        response = requests.post(gemini_url, json=payload)
+
+        logging.debug(f"Status code risposta Gemini: {response.status_code}")
+        logging.debug(f"Contenuto risposta Gemini: {response.text}")
+
+        calorie = proteine = carboidrati = grassi = "N/D"
+
+        if response.status_code == 200:
+            try:
+                output = response.json()
+                text_response = output["candidates"][0]["content"]["parts"][0]["text"]
+                logging.debug(f"RISPOSTA GEMINI RAW: {text_response}")
+
+                pulito = estrai_json_da_markdown(text_response)
+                nutrizione = json.loads(pulito)
+
+                calorie = nutrizione.get("calorie", "N/D")
+                proteine = nutrizione.get("proteine", "N/D")
+                carboidrati = nutrizione.get("carboidrati", "N/D")
+                grassi = nutrizione.get("grassi", "N/D")
+
+            except Exception as e:
+                logging.error(f"Errore parsing risposta Gemini: {e}")
+                flash("Errore nell'elaborazione della risposta da Gemini")
+        else:
+            logging.error(f"Errore API Gemini, status code: {response.status_code}")
+            flash("Errore nella chiamata all'API Gemini")
+
+        nuovo_pasto = {
+            "utente": username,
+            "tipo": tipo,
+            "descrizione": descrizione,
+            "data_ora": data_ora,
+            "calorie": calorie,
+            "proteine": proteine,
+            "carboidrati": carboidrati,
+            "grassi": grassi
+        }
+
+        with open(PASTI_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(nuovo_pasto) + "\n")
+
+        flash("Pasto registrato con valori nutrizionali.")
+        return redirect(url_for("home"))
+
+    default_ora = datetime.now().strftime("%d/%m/%Y - %H:%M")
+    return render_template("inserisci_pasto.html", default_ora=default_ora)
+
+@app.route("/storico_pasti")
+@login_required
+def storico_pasti():
+    username = session["username"]
+    pasti = leggi_pasti_utente(username)
+    return render_template("storico_pasti.html", pasti=pasti)
+
+@app.route("/elimina_pasto/<int:index>", methods=["POST"])
+@login_required
+def elimina_pasto(index):
+    username = session["username"]
+    pasti = leggi_pasti_utente(username)
+    if 0 <= index < len(pasti):
+        del pasti[index]
+        nuovi_pasti = []
+        try:
+            with open(PASTI_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        p = json.loads(line)
+                        if p.get("utente") != username:
+                            nuovi_pasti.append(p)
+                    except json.JSONDecodeError:
+                        logging.warning(f"Riga JSON malformata ignorata in elimina_pasto: {line}")
+        except FileNotFoundError:
+            pass
+        nuovi_pasti.extend(pasti)
+        with open(PASTI_FILE, "w", encoding="utf-8") as f:
+            for pasto in nuovi_pasti:
+                f.write(json.dumps(pasto) + "\n")
+        flash("Pasto eliminato con successo.")
+    else:
+        flash("Indice pasto non valido.")
+    return redirect(url_for("storico_pasti"))
+
 @app.route("/modifica_pasto/<int:index>", methods=["GET", "POST"])
 @login_required
 def modifica_pasto(index):
@@ -250,44 +365,6 @@ def modifica_pasto(index):
 
     return render_template("modifica_pasto.html", pasto=pasto, index=index)
 
-
-@app.route("/storico_pasti")
-@login_required
-def storico_pasti():
-    username = session["username"]
-    pasti = leggi_pasti_utente(username)
-    return render_template("storico_pasti.html", pasti=pasti)
-
-@app.route("/elimina_pasto/<int:index>", methods=["POST"])
-@login_required
-def elimina_pasto(index):
-    username = session["username"]
-    pasti = leggi_pasti_utente(username)
-    if 0 <= index < len(pasti):
-        del pasti[index]
-        nuovi_pasti = []
-        try:
-            with open(PASTI_FILE, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    try:
-                        p = json.loads(line)
-                        if p.get("utente") != username:
-                            nuovi_pasti.append(p)
-                    except json.JSONDecodeError:
-                        logging.warning(f"Riga JSON malformata ignorata in elimina_pasto: {line}")
-        except FileNotFoundError:
-            pass
-        nuovi_pasti.extend(pasti)
-        with open(PASTI_FILE, "w", encoding="utf-8") as f:
-            for pasto in nuovi_pasti:
-                f.write(json.dumps(pasto) + "\n")
-        flash("Pasto eliminato con successo.")
-    else:
-        flash("Indice pasto non valido.")
-    return redirect(url_for("storico_pasti"))
 
 # ======================
 # Route Pesate
