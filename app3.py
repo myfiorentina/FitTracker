@@ -20,6 +20,7 @@ app = Flask(__name__)
 app.secret_key = "supersegreto"
 logging.basicConfig(level=logging.DEBUG)
 
+
 # ======================
 # Funzioni di utilità
 # ======================
@@ -39,19 +40,19 @@ def valida_data_ora(data_ora_str):
         return False
 
 def load_users():
-    if not os.path.exists(USERS_FILE):
+    if not os.path.exists("/data/users.json"):
         return {}
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
+    with open("/data/users.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 def save_users(users):
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
+    with open("/data/users.json", "w", encoding="utf-8") as f:
         json.dump(users, f, indent=2)
 
 def leggi_pasti_utente(username):
     pasti = []
     try:
-        with open(PASTI_FILE, "r", encoding="utf-8") as f:
+        with open("/data/pasti.json", "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -76,7 +77,7 @@ def leggi_pasti_utente(username):
 def leggi_pesate_utente(username):
     pesate = []
     try:
-        with open(PESATE_FILE, "r", encoding="utf-8") as f:
+        with open("/data/pesate.json", "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -97,6 +98,7 @@ def leggi_pesate_utente(username):
             return datetime.min
     pesate.sort(key=key_func, reverse=True)
     return pesate
+
 
 # ======================
 # Decoratori
@@ -129,6 +131,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 # ======================
 # Route di base
 # ======================
@@ -145,27 +148,28 @@ def login():
         password = request.form["password"]
         users = load_users()
 
-if username in users and check_password_hash(users[username]["password"], password):
-    session["username"] = username
-    # Salva anche dati base in session
-    session["nome"] = users[username]["nome"]
-    session["cognome"] = users[username]["cognome"]
-    session["sesso"] = users[username]["sesso"]
-    session["eta"] = users[username]["eta"]
-    session["peso_iniziale"] = users[username]["peso_iniziale"]
-    session["altezza"] = users[username]["altezza"]
-    session["email"] = users[username].get("email", "")
-    session["is_admin"] = users[username].get("admin", False)
-    return redirect(url_for("home"))
-else:
-    flash("Credenziali non valide.")
-return render_template("login.html")
+        if username in users and check_password_hash(users[username]["password"], password):
+            session["username"] = username
+            # Salva anche dati base in session
+            session["nome"] = users[username]["nome"]
+            session["cognome"] = users[username]["cognome"]
+            session["sesso"] = users[username]["sesso"]
+            session["eta"] = users[username]["eta"]
+            session["peso_iniziale"] = users[username]["peso_iniziale"]
+            session["altezza"] = users[username]["altezza"]
+            session["email"] = users[username].get("email", "")
+            session["is_admin"] = users[username].get("admin", False)
+            return redirect(url_for("home"))
+        else:
+            flash("Credenziali non valide.")
+    return render_template("login.html")
 
 @app.route("/logout")
 def logout():
     session.clear()
     flash("Logout effettuato.")
     return redirect(url_for("login"))
+
 
 # ======================
 # Route Pasti
@@ -239,7 +243,7 @@ def inserisci_pasto():
             "grassi": grassi
         }
 
-        with open(PASTI_FILE, "a", encoding="utf-8") as f:
+        with open("pasti.json", "a", encoding="utf-8") as f:
             f.write(json.dumps(nuovo_pasto) + "\n")
 
         flash("Pasto registrato con valori nutrizionali.")
@@ -264,7 +268,7 @@ def elimina_pasto(index):
         del pasti[index]
         nuovi_pasti = []
         try:
-            with open(PASTI_FILE, "r", encoding="utf-8") as f:
+            with open("/data/pasti.json", "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -278,7 +282,7 @@ def elimina_pasto(index):
         except FileNotFoundError:
             pass
         nuovi_pasti.extend(pasti)
-        with open(PASTI_FILE, "w", encoding="utf-8") as f:
+        with open("/data/pasti.json", "w", encoding="utf-8") as f:
             for pasto in nuovi_pasti:
                 f.write(json.dumps(pasto) + "\n")
         flash("Pasto eliminato con successo.")
@@ -298,37 +302,38 @@ def modifica_pasto(index):
 
     pasto = pasti[index]
 
-if request.method == "POST":
-    tipo = request.form.get('tipo', '').strip()
-    descrizione = request.form.get('descrizione', '').strip()
-    data_ora = request.form.get('data_ora', '').strip()
+    if request.method == "POST":
+        tipo = request.form.get('tipo', '').strip()
+        descrizione = request.form.get('descrizione', '').strip()
+        data_ora = request.form.get('data_ora', '').strip()
 
-    if not valida_data_ora(data_ora):
-        flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
-        return redirect(request.url)
+        if not valida_data_ora(data_ora):
+            flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
+            return redirect(request.url)
 
-    pasto['tipo'] = tipo
-    pasto['descrizione'] = descrizione
-    pasto['data_ora'] = data_ora
+        pasto['tipo'] = tipo
+        pasto['descrizione'] = descrizione
+        pasto['data_ora'] = data_ora
 
-    nuovi_pasti = []
-    try:
-        with open(PASTI_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.strip():
-                    p = json.loads(line)
-                    if p.get("utente") != username:
-                        nuovi_pasti.append(p)
-    except FileNotFoundError:
-        pass
-    nuovi_pasti.extend(pasti)
-    with open(PASTI_FILE, "w", encoding="utf-8") as f:
-        for p in nuovi_pasti:
-            f.write(json.dumps(p) + "\n")
-    flash("Pasto modificato correttamente.")
-    return redirect(url_for("storico_pasti"))
+        nuovi_pasti = []
+        try:
+            with open("/data/pasti.json", "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        p = json.loads(line)
+                        if p.get("utente") != username:
+                            nuovi_pasti.append(p)
+        except FileNotFoundError:
+            pass
+        nuovi_pasti.extend(pasti)
+        with open("/data/pasti.json", "w", encoding="utf-8") as f:
+            for p in nuovi_pasti:
+                f.write(json.dumps(p) + "\n")
+        flash("Pasto modificato correttamente.")
+        return redirect(url_for("storico_pasti"))
 
-return render_template("modifica_pasto.html", pasto=pasto, index=index)
+    return render_template("modifica_pasto.html", pasto=pasto, index=index)
+
 
 # ======================
 # Route Pesate
@@ -350,7 +355,7 @@ def elimina_pesata(index):
         del pesate[index]
         nuovi_pesate = []
         try:
-            with open(PESATE_FILE, "r", encoding="utf-8") as f:
+            with open("/data/pesate.json", "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -364,7 +369,7 @@ def elimina_pesata(index):
         except FileNotFoundError:
             pass
         nuovi_pesate.extend(pesate)
-        with open(PESATE_FILE, "w", encoding="utf-8") as f:
+        with open("/data/pesate.json", "w", encoding="utf-8") as f:
             for pesata in nuovi_pesate:
                 f.write(json.dumps(pesata) + "\n")
         flash("Pesata eliminata con successo.")
@@ -397,7 +402,7 @@ def modifica_pesata(index):
 
         nuovi_pesate = []
         try:
-            with open(PESATE_FILE, "r", encoding="utf-8") as f:
+            with open("/data/pesate.json", "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -412,7 +417,7 @@ def modifica_pesata(index):
             pass
 
         nuovi_pesate.extend(pesate)
-        with open(PESATE_FILE, "w", encoding="utf-8") as f:
+        with open("/data/pesate.json", "w", encoding="utf-8") as f:
             for p in nuovi_pesate:
                 f.write(json.dumps(p) + "\n")
 
@@ -420,6 +425,7 @@ def modifica_pesata(index):
         return redirect(url_for("storico_pesate"))
 
     return render_template("modifica_pesata.html", pesata=pesata, index=index)
+
 
 @app.route("/inserisci_pesata", methods=["GET", "POST"])
 @login_required
@@ -442,39 +448,40 @@ def inserisci_pesata():
 
         dati_pesata = {"utente": username, "data_ora": data_ora}
 
-for campo in campi_float:
-    valore = request.form.get(campo, "").strip()
-    try:
-        dati_pesata[campo] = float(valore)
-    except ValueError:
-        flash(f"Valore non valido per {campo}. Inserisci un numero corretto.")
-        return redirect(request.url)
+        for campo in campi_float:
+            valore = request.form.get(campo, "").strip()
+            try:
+                dati_pesata[campo] = float(valore)
+            except ValueError:
+                flash(f"Valore non valido per {campo}. Inserisci un numero corretto.")
+                return redirect(request.url)
 
-for campo in campi_int:
-    valore = request.form.get(campo, "").strip()
-    try:
-        dati_pesata[campo] = int(valore)
-    except ValueError:
-        flash(f"Valore non valido per {campo}. Inserisci un numero intero corretto.")
-        return redirect(request.url)
+        for campo in campi_int:
+            valore = request.form.get(campo, "").strip()
+            try:
+                dati_pesata[campo] = int(valore)
+            except ValueError:
+                flash(f"Valore non valido per {campo}. Inserisci un numero intero corretto.")
+                return redirect(request.url)
 
-try:
-    with open(PESATE_FILE, "a", encoding="utf-8") as f:
-        f.write(json.dumps(dati_pesata) + "\n")
-    flash("Pesata salvata correttamente.")
-except Exception as e:
-    logging.error(f"Errore salvataggio pesata: {e}")
-    flash("Errore nel salvataggio della pesata.")
+        try:
+            with open("/data/pesate.json", "a", encoding="utf-8") as f:
+                f.write(json.dumps(dati_pesata) + "\n")
+            flash("Pesata salvata correttamente.")
+        except Exception as e:
+            logging.error(f"Errore salvataggio pesata: {e}")
+            flash("Errore nel salvataggio della pesata.")
 
-return redirect(url_for("home"))
+        return redirect(url_for("home"))
 
-pesate = leggi_pesate_utente(username)
-dati_precompilati = {}
-if pesate:
-    dati_precompilati = pesate[0].copy()
-    dati_precompilati["data_ora"] = datetime.now().strftime("%d/%m/%Y - %H:%M")
+    pesate = leggi_pesate_utente(username)
+    dati_precompilati = {}
+    if pesate:
+        dati_precompilati = pesate[0].copy()
+        dati_precompilati["data_ora"] = datetime.now().strftime("%d/%m/%Y - %H:%M")
 
-return render_template("inserisci_pesata.html", default_ora=datetime.now().strftime("%d/%m/%Y - %H:%M"), dati=dati_precompilati)
+    return render_template("inserisci_pesata.html", default_ora=datetime.now().strftime("%d/%m/%Y - %H:%M"), dati=dati_precompilati)
+
 
 # ======================
 # Route Report
@@ -587,6 +594,7 @@ def report_pesate():
                            start_date=start_date,
                            end_date=end_date)
 
+
 # ======================
 # Route Registrazione e Profilo
 # ======================
@@ -694,6 +702,7 @@ def profilo():
             flash("Compila tutti i campi correttamente, compresa l'email.")
             return redirect(request.url)
 
+        # Puoi aggiungere validazione semplice per email, es:
         if "@" not in email or "." not in email:
             flash("Inserisci un indirizzo email valido.")
             return redirect(request.url)
@@ -720,11 +729,15 @@ def profilo():
         users[username] = user
         save_users(users)
 
+        # Aggiorna session con nuova email
         session["email"] = email
+
         flash("Profilo aggiornato con successo.")
         return redirect(url_for("profilo"))
 
+    # GET: passa user al template
     return render_template("profilo.html", user=user)
+
 
 
 @app.route("/cancella_account", methods=["POST"])
@@ -742,6 +755,7 @@ def cancella_account():
     else:
         flash("Utente non trovato.")
         return redirect(url_for("home"))
+
 
 # ======================
 # Route Admin
@@ -766,6 +780,7 @@ def elimina_utente(username):
     else:
         flash("Utente non trovato.")
     return redirect(url_for("admin_utenti"))
+
 
 # ======================
 # Avvio app
