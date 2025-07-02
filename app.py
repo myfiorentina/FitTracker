@@ -145,21 +145,21 @@ def login():
         password = request.form["password"]
         users = load_users()
 
-if username in users and check_password_hash(users[username]["password"], password):
-    session["username"] = username
-    # Salva anche dati base in session
-    session["nome"] = users[username]["nome"]
-    session["cognome"] = users[username]["cognome"]
-    session["sesso"] = users[username]["sesso"]
-    session["eta"] = users[username]["eta"]
-    session["peso_iniziale"] = users[username]["peso_iniziale"]
-    session["altezza"] = users[username]["altezza"]
-    session["email"] = users[username].get("email", "")
-    session["is_admin"] = users[username].get("admin", False)
-    return redirect(url_for("home"))
-else:
-    flash("Credenziali non valide.")
-return render_template("login.html")
+        if username in users and check_password_hash(users[username]["password"], password):
+            session["username"] = username
+            # Salva anche dati base in session
+            session["nome"] = users[username]["nome"]
+            session["cognome"] = users[username]["cognome"]
+            session["sesso"] = users[username]["sesso"]
+            session["eta"] = users[username]["eta"]
+            session["peso_iniziale"] = users[username]["peso_iniziale"]
+            session["altezza"] = users[username]["altezza"]
+            session["email"] = users[username].get("email", "")
+            session["is_admin"] = users[username].get("admin", False)
+            return redirect(url_for("home"))
+        else:
+            flash("Credenziali non valide.")
+    return render_template("login.html")
 
 @app.route("/logout")
 def logout():
