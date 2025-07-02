@@ -1,12 +1,11 @@
-# fly.toml app configuration file generated for fittracker on 2025-07-02T12:59:06+02:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
 app = 'fittracker'
 primary_region = 'fra'
 
 [build]
+
+[mounts]
+  source = "dati_volume"
+  destination = "/data"
 
 [http_service]
   internal_port = 8080

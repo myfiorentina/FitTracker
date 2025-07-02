@@ -8,14 +8,5 @@
     "peso_iniziale": 106.0,
     "altezza": 175,
     "admin": true
-  },
-  "fra": {
-    "password": "scrypt:32768:8:1$mWFlzL8Ta1feu1Hx$91b8a29ea901172948341b5989e96b9307d6fcaa0b54c23bdf5a834af812e311b47f3843f46480adb6144bd0a7d6a1452e09c2ab8678e6f050d1fddf6fab17f2",
-    "nome": "Francesca",
-    "cognome": "Baldone",
-    "sesso": "F",
-    "eta": 30,
-    "peso_iniziale": 60.0,
-    "altezza": 177
   }
 }

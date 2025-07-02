@@ -9,6 +9,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 from collections import defaultdict
 
+DATA_PATH = "/data"
+
 # Configurazioni Flask e logging
 app = Flask(__name__)
 app.secret_key = "supersegreto"
@@ -34,19 +36,19 @@ def valida_data_ora(data_ora_str):
         return False
 
 def load_users():
-    if not os.path.exists("users.json"):
+    if not os.path.exists("/data/users.json"):
         return {}
-    with open("users.json", "r", encoding="utf-8") as f:
+    with open("/data/users.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 def save_users(users):
-    with open("users.json", "w", encoding="utf-8") as f:
+    with open("/data/users.json", "w", encoding="utf-8") as f:
         json.dump(users, f, indent=2)
 
 def leggi_pasti_utente(username):
     pasti = []
     try:
-        with open("pasti.json", "r", encoding="utf-8") as f:
+        with open("/data/pasti.json", "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -71,7 +73,7 @@ def leggi_pasti_utente(username):
 def leggi_pesate_utente(username):
     pesate = []
     try:
-        with open("pesate.json", "r", encoding="utf-8") as f:
+        with open("/data/pesate.json", "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -262,7 +264,7 @@ def elimina_pasto(index):
         del pasti[index]
         nuovi_pasti = []
         try:
-            with open("pasti.json", "r", encoding="utf-8") as f:
+            with open("/data/pasti.json", "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -276,7 +278,7 @@ def elimina_pasto(index):
         except FileNotFoundError:
             pass
         nuovi_pasti.extend(pasti)
-        with open("pasti.json", "w", encoding="utf-8") as f:
+        with open("/data/pasti.json", "w", encoding="utf-8") as f:
             for pasto in nuovi_pasti:
                 f.write(json.dumps(pasto) + "\n")
         flash("Pasto eliminato con successo.")
@@ -311,7 +313,7 @@ def modifica_pasto(index):
 
         nuovi_pasti = []
         try:
-            with open("pasti.json", "r", encoding="utf-8") as f:
+            with open("/data/pasti.json", "r", encoding="utf-8") as f:
                 for line in f:
                     if line.strip():
                         p = json.loads(line)
@@ -320,7 +322,7 @@ def modifica_pasto(index):
         except FileNotFoundError:
             pass
         nuovi_pasti.extend(pasti)
-        with open("pasti.json", "w", encoding="utf-8") as f:
+        with open("/data/pasti.json", "w", encoding="utf-8") as f:
             for p in nuovi_pasti:
                 f.write(json.dumps(p) + "\n")
         flash("Pasto modificato correttamente.")
@@ -349,7 +351,7 @@ def elimina_pesata(index):
         del pesate[index]
         nuovi_pesate = []
         try:
-            with open("pesate.json", "r", encoding="utf-8") as f:
+            with open("/data/pesate.json", "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -363,7 +365,7 @@ def elimina_pesata(index):
         except FileNotFoundError:
             pass
         nuovi_pesate.extend(pesate)
-        with open("pesate.json", "w", encoding="utf-8") as f:
+        with open("/data/pesate.json", "w", encoding="utf-8") as f:
             for pesata in nuovi_pesate:
                 f.write(json.dumps(pesata) + "\n")
         flash("Pesata eliminata con successo.")
@@ -396,7 +398,7 @@ def modifica_pesata(index):
 
         nuovi_pesate = []
         try:
-            with open("pesate.json", "r", encoding="utf-8") as f:
+            with open("/data/pesate.json", "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -411,7 +413,7 @@ def modifica_pesata(index):
             pass
 
         nuovi_pesate.extend(pesate)
-        with open("pesate.json", "w", encoding="utf-8") as f:
+        with open("/data/pesate.json", "w", encoding="utf-8") as f:
             for p in nuovi_pesate:
                 f.write(json.dumps(p) + "\n")
 
@@ -459,7 +461,7 @@ def inserisci_pesata():
                 return redirect(request.url)
 
         try:
-            with open("pesate.json", "a", encoding="utf-8") as f:
+            with open("/data/pesate.json", "a", encoding="utf-8") as f:
                 f.write(json.dumps(dati_pesata) + "\n")
             flash("Pesata salvata correttamente.")
         except Exception as e:
