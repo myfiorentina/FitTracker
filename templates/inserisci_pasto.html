@@ -14,8 +14,8 @@
   </label>
 
   <label class="block mb-4">Data e ora:
-    <input type="text" name="data_ora" value="{{ default_ora }}" class="border p-2 w-full rounded mt-1" required>
-    <small class="text-gray-500">Formato richiesto: gg/mm/aaaa - hh:mm</small>
+      <input type="datetime-local" name="data_ora" value="{{ default_ora }}" class="border p-2 w-full rounded mt-1" required>
+      <small class="text-gray-500">Formato richiesto: YYYY-MM-DDTHH:MM</small>
   </label>
 
   <label class="block mb-4">Descrizione del pasto:

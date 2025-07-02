@@ -31,7 +31,7 @@
     margin-bottom: 8px;
     color: #555;
   }
-  input[type="text"],
+  input[type="datetime-local"],
   input[type="number"] {
     width: 100%;
     padding: 8px 10px;
@@ -65,15 +65,13 @@
 
 <h2>Inserisci Pesata Manuale</h2>
 <form method="POST" novalidate>
-  <label for="data_ora">Data e ora (gg/mm/aaaa - hh:mm):</label>
+  <label for="data_ora">Data e ora:</label>
   <input
-    type="text"
+    type="datetime-local"
     id="data_ora"
     name="data_ora"
-    value="{{ dati.data_ora if dati and dati.data_ora else default_ora }}"
+    value="{{ default_ora }}"
     required
-    placeholder="02/07/2025 - 08:56"
-    pattern="^\d{2}/\d{2}/\d{4} - \d{2}:\d{2}$"
   >
 
   <div class="grid-container">

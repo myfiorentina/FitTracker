@@ -178,57 +178,79 @@ def inserisci_pasto():
     if request.method == "POST":
         tipo = request.form.get('tipo', '').strip()
         descrizione = request.form.get('descrizione', '').strip()
-        italy = pytz.timezone("Europe/Rome")
-        data_ora = request.form.get('data_ora', '').strip()
+
+        data_ora_raw = request.form.get('data_ora', '').strip()
+
+        try:
+            naive_dt = datetime.strptime(data_ora_raw, "%Y-%m-%dT%H:%M")
+            italy = pytz.timezone("Europe/Rome")
+            data_ora_obj = italy.localize(naive_dt)
+            data_ora = data_ora_obj.strftime("%d/%m/%Y - %H:%M")
+        except ValueError:
+            flash("Data/Ora non valida. Usa formato corretto.")
+            return redirect(request.url)
+
         username = session['username']
 
         if not valida_data_ora(data_ora):
             flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
             return redirect(request.url)
 
-        # Chiamata API Gemini
         gemini_api_key = "AIzaSyAJ_U8NMEJAr7sk24uqjzJdOrxD9meFMr0"
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_api_key}"
 
-        prompt = (
+        prompt_nutrizione = (
             f"Fornisci solo un oggetto JSON con i seguenti campi: "
             f"calorie (in kcal), proteine (in grammi), carboidrati (in grammi), grassi (in grammi). "
             f"Esempio: {{\"calorie\": 250, \"proteine\": 10, \"carboidrati\": 20, \"grassi\": 5}}. "
             f"Descrizione del pasto: {descrizione}"
         )
 
-        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        payload_nutrizione = {"contents": [{"parts": [{"text": prompt_nutrizione}]}]}
 
-        logging.debug(f"Chiamata Gemini URL: {gemini_url}")
-        logging.debug(f"Payload inviato a Gemini: {json.dumps(payload)}")
-
-        response = requests.post(gemini_url, json=payload)
-
-        logging.debug(f"Status code risposta Gemini: {response.status_code}")
-        logging.debug(f"Contenuto risposta Gemini: {response.text}")
+        response_nutrizione = requests.post(gemini_url, json=payload_nutrizione)
 
         calorie = proteine = carboidrati = grassi = "N/D"
 
-        if response.status_code == 200:
+        if response_nutrizione.status_code == 200:
             try:
-                output = response.json()
+                output = response_nutrizione.json()
                 text_response = output["candidates"][0]["content"]["parts"][0]["text"]
-                logging.debug(f"RISPOSTA GEMINI RAW: {text_response}")
-
                 pulito = estrai_json_da_markdown(text_response)
                 nutrizione = json.loads(pulito)
-
                 calorie = nutrizione.get("calorie", "N/D")
                 proteine = nutrizione.get("proteine", "N/D")
                 carboidrati = nutrizione.get("carboidrati", "N/D")
                 grassi = nutrizione.get("grassi", "N/D")
-
             except Exception as e:
                 logging.error(f"Errore parsing risposta Gemini: {e}")
                 flash("Errore nell'elaborazione della risposta da Gemini")
         else:
-            logging.error(f"Errore API Gemini, status code: {response.status_code}")
+            logging.error(f"Errore API Gemini, status code: {response_nutrizione.status_code}")
             flash("Errore nella chiamata all'API Gemini")
+
+        commento = ""
+        try:
+            prompt_commento = (
+                f"Agisci come un esperto nutrizionista. In base al seguente pasto e ai valori nutrizionali stimati, "
+                f"fornisci un breve commento utile per una persona che vuole perdere peso. Tono gentile e informativo.\n"
+                f"Tipo pasto: {tipo}\nDescrizione: {descrizione}\n"
+                f"Valori stimati: {calorie} kcal, {proteine} g proteine, {carboidrati} g carboidrati, {grassi} g grassi.\n"
+                f"Fornisci solo un oggetto JSON con campo 'commento'."
+            )
+
+            payload_commento = {"contents": [{"parts": [{"text": prompt_commento}]}]}
+            response_commento = requests.post(gemini_url, json=payload_commento)
+
+            if response_commento.status_code == 200:
+                output = response_commento.json()
+                text_commento = output["candidates"][0]["content"]["parts"][0]["text"]
+                commento_json = json.loads(estrai_json_da_markdown(text_commento))
+                commento = commento_json.get("commento", "")
+            else:
+                logging.warning("Errore ricezione commento dietetico da Gemini")
+        except Exception as e:
+            logging.warning(f"Errore generazione commento dietetico: {e}")
 
         nuovo_pasto = {
             "utente": username,
@@ -238,17 +260,20 @@ def inserisci_pasto():
             "calorie": calorie,
             "proteine": proteine,
             "carboidrati": carboidrati,
-            "grassi": grassi
+            "grassi": grassi,
+            "commento_dietetico": commento
         }
 
         with open(PASTI_FILE, "a", encoding="utf-8") as f:
             f.write(json.dumps(nuovo_pasto) + "\n")
 
-        flash("Pasto registrato con valori nutrizionali.")
+        flash("Pasto registrato con valori nutrizionali e commento personalizzato.")
         return redirect(url_for("home"))
 
-    default_ora = datetime.now().strftime("%d/%m/%Y - %H:%M")
+    italy = pytz.timezone("Europe/Rome")
+    default_ora = datetime.now(italy).strftime("%Y-%m-%dT%H:%M")
     return render_template("inserisci_pasto.html", default_ora=default_ora)
+
 
 @app.route("/storico_pasti")
 @login_required
@@ -303,8 +328,18 @@ def modifica_pasto(index):
     if request.method == "POST":
         tipo = request.form.get('tipo', '').strip()
         descrizione = request.form.get('descrizione', '').strip()
-        italy = pytz.timezone("Europe/Rome")
-        data_ora = request.form.get('data_ora', '').strip()
+
+        data_ora_raw = request.form.get('data_ora', '').strip()
+
+        try:
+            # Il browser invia data/ora locale senza timezone: assumiamo che sia in ora locale italiana
+            naive_dt = datetime.strptime(data_ora_raw, "%Y-%m-%dT%H:%M")
+            italy = pytz.timezone("Europe/Rome")
+            data_ora_obj = italy.localize(naive_dt)
+            data_ora = data_ora_obj.strftime("%d/%m/%Y - %H:%M")
+        except ValueError:
+            flash("Data/Ora non valida. Usa formato corretto.")
+            return redirect(request.url)
 
         if not valida_data_ora(data_ora):
             flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
@@ -464,13 +499,16 @@ def modifica_pesata(index):
 @login_required
 def inserisci_pesata():
     username = session["username"]
+    italy = pytz.timezone("Europe/Rome")
 
     if request.method == "POST":
-        italy = pytz.timezone("Europe/Rome")
-        data_ora = request.form.get("data_ora", "").strip()
-
-        if not valida_data_ora(data_ora):
-            flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
+        data_ora_raw = request.form.get("data_ora", "").strip()
+        try:
+            naive_dt = datetime.strptime(data_ora_raw, "%Y-%m-%dT%H:%M")
+            data_ora_obj = italy.localize(naive_dt)
+            data_ora = data_ora_obj.strftime("%d/%m/%Y - %H:%M")
+        except ValueError:
+            flash("Data/Ora non valida. Usa il formato corretto.")
             return redirect(request.url)
 
         campi_float = [
@@ -512,9 +550,11 @@ def inserisci_pesata():
     dati_precompilati = {}
     if pesate:
         dati_precompilati = pesate[0].copy()
-        dati_precompilati["data_ora"] = datetime.now().strftime("%d/%m/%Y - %H:%M")
 
-    return render_template("inserisci_pesata.html", default_ora=datetime.now().strftime("%d/%m/%Y - %H:%M"), dati=dati_precompilati)
+    # Precompila con ora italiana in formato compatibile con input type datetime-local
+    default_ora = datetime.now(pytz.utc).astimezone(italy).strftime("%Y-%m-%dT%H:%M")
+    return render_template("inserisci_pesata.html", default_ora=default_ora, dati=dati_precompilati)
+
 
 
 # ======================

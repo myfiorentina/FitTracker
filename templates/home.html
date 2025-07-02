@@ -3,6 +3,13 @@
 <h2 class="text-2xl font-semibold mb-4">Benvenuto, {{ username }}!</h2>
 <p>Qui potrai gestire i tuoi pasti e le pesate giornaliere.</p>
 
+{% if ultimo_pasto %}
+<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-6 shadow rounded">
+  <h3 class="font-semibold text-lg mb-2">🍽️ Commento sull'ultimo pasto ({{ ultimo_pasto.tipo }})</h3>
+  <p class="text-gray-800 text-sm italic whitespace-pre-line">{{ ultimo_pasto.commento_dietetico or 'Nessun commento disponibile.' }}</p>
+</div>
+{% endif %}
+
 <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
   <a href="{{ url_for('inserisci_pasto') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📋 Inserisci Pasto</a>
   <a href="{{ url_for('storico_pasti') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📖 Storico Pasti</a>
