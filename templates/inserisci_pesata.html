@@ -2,35 +2,43 @@
 {% block content %}
 <style>
   form {
-    max-width: 700px;
+    max-width: 720px;
     margin: 20px auto;
     background: #f9fafb;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
   }
+
   h2 {
     text-align: center;
     margin-bottom: 20px;
   }
+
   .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 20px;
+    gap: 16px;
   }
+
   .grid-item {
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    padding: 15px;
-    text-align: center;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
   }
-  label {
-    display: block;
+
+  .grid-item label {
     font-weight: 600;
-    margin-bottom: 8px;
-    color: #555;
+    color: #444;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    min-height: 2.4em;
+    margin-bottom: 6px;
   }
+
   input[type="datetime-local"],
   input[type="number"] {
     width: 100%;
@@ -40,6 +48,7 @@
     font-size: 1rem;
     box-sizing: border-box;
   }
+
   button {
     display: block;
     width: 100%;
@@ -51,21 +60,31 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s;
   }
+
   button:hover {
     background-color: #357ab8;
   }
+
   .link-home {
     display: block;
     margin-top: 15px;
     text-align: center;
     font-size: 0.9rem;
   }
+
+  @media (max-width: 500px) {
+    .grid-container {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 
 <h2>Inserisci Pesata Manuale</h2>
+
 <form method="POST" novalidate>
-  <label for="data_ora">Data e ora:</label>
+  <label for="data_ora"><strong>Data e ora:</strong></label>
   <input
     type="datetime-local"
     id="data_ora"
@@ -90,7 +109,7 @@
       ("bmr", "BMR (kcal)", 1),
       ("eta_metabolica", "Età metabolica", 1)
     ] %}
-    
+
     {% for name, label, step in fields %}
     <div class="grid-item">
       <label for="{{ name }}">{{ label }}:</label>

@@ -1,33 +1,43 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2 class="text-2xl font-semibold mb-4">Gestione Utenti (Admin)</h2>
+<h2 class="text-2xl font-semibold mb-4 text-center">Gestione Utenti (Admin)</h2>
 
-<table class="w-full border-collapse border">
-  <thead>
-    <tr class="bg-gray-200">
-      <th class="border px-4 py-2">Username</th>
-      <th class="border px-4 py-2">Nome</th>
-      <th class="border px-4 py-2">Cognome</th>
-      <th class="border px-4 py-2">Email (opzionale)</th>
-      <th class="border px-4 py-2">Azioni</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for username, dati in users.items() %}
-    <tr>
-      <td class="border px-4 py-2">{{ username }}</td>
-      <td class="border px-4 py-2">{{ dati.nome }}</td>
-      <td class="border px-4 py-2">{{ dati.cognome }}</td>
-      <td class="border px-4 py-2">{{ dati.email if dati.email else '-' }}</td>
-      <td class="border px-4 py-2">
-        <form method="POST" action="{{ url_for('elimina_utente', username=username) }}" onsubmit="return confirm('Sei sicuro di voler eliminare questo utente?');">
-          <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Elimina</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="overflow-x-auto">
+  <table class="min-w-full border border-gray-300 text-sm md:text-base">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="border px-3 py-2 text-left">Username</th>
+        <th class="border px-3 py-2 text-left">Nome</th>
+        <th class="border px-3 py-2 text-left">Cognome</th>
+        <th class="border px-3 py-2 text-left">Email (opzionale)</th>
+        <th class="border px-3 py-2 text-left">Azioni</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for username, dati in users.items() %}
+      <tr class="hover:bg-gray-50">
+        <td class="border px-3 py-2">{{ username }}</td>
+        <td class="border px-3 py-2">{{ dati.nome }}</td>
+        <td class="border px-3 py-2">{{ dati.cognome }}</td>
+        <td class="border px-3 py-2">{{ dati.email if dati.email else '-' }}</td>
+        <td class="border px-3 py-2">
+          <form method="POST" action="{{ url_for('elimina_utente', username=username) }}"
+                onsubmit="return confirm('Sei sicuro di voler eliminare questo utente?');">
+            <button type="submit"
+                    class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-xs sm:text-sm">
+              Elimina
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
-<a href="{{ url_for('home') }}" class="inline-block mt-4 text-blue-600 hover:underline">Torna alla Home</a>
+<div class="mt-6 text-center">
+  <a href="{{ url_for('home') }}" class="text-blue-600 hover:underline text-sm md:text-base">
+    Torna alla Home
+  </a>
+</div>
 {% endblock %}

@@ -1,39 +1,46 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2 class="text-2xl font-semibold mb-4">Storico Pasti</h2>
-<table class="min-w-full bg-white rounded shadow overflow-hidden">
-  <thead class="bg-green-600 text-white">
-    <tr>
-      <th class="p-3">Data/Ora</th>
-      <th class="p-3">Tipo</th>
-      <th class="p-3">Descrizione</th>
-      <th class="p-3">Calorie</th>
-      <th class="p-3">Proteine</th>
-      <th class="p-3">Carboidrati</th>
-      <th class="p-3">Grassi</th>
-      <th class="p-3">Azioni</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for pasto in pasti %}
-    <tr class="border-b">
-      <td class="p-2">{{ pasto.data_ora }}</td>
-      <td class="p-2">{{ pasto.tipo }}</td>
-      <td class="p-2">{{ pasto.descrizione }}</td>
-      <td class="p-2">{{ pasto.calorie }}</td>
-      <td class="p-2">{{ pasto.proteine }}</td>
-      <td class="p-2">{{ pasto.carboidrati }}</td>
-      <td class="p-2">{{ pasto.grassi }}</td>
-      <td class="p-2 space-x-2">
-        <a href="{{ url_for('modifica_pasto', index=loop.index0) }}" class="text-blue-600 hover:underline">Modifica</a>
-        <form action="{{ url_for('elimina_pasto', index=loop.index0) }}" method="post" style="display:inline;" onsubmit="return confirm('Sei sicuro di voler eliminare questo pasto?');">
-          <button type="submit" class="text-red-600 hover:underline bg-transparent border-0 cursor-pointer p-0">Elimina</button>
-        </form>
-      </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="8" class="text-center p-4">Nessun pasto inserito</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<h2 class="text-2xl font-semibold mb-6 text-center">Storico Pasti</h2>
+
+<div class="overflow-x-auto">
+  <table class="min-w-full bg-white rounded shadow overflow-hidden">
+    <thead class="bg-green-600 text-white">
+      <tr>
+        <th class="p-3 text-sm text-left">Data/Ora</th>
+        <th class="p-3 text-sm text-left">Tipo</th>
+        <th class="p-3 text-sm text-left">Descrizione</th>
+        <th class="p-3 text-sm text-center">Calorie</th>
+        <th class="p-3 text-sm text-center">Proteine</th>
+        <th class="p-3 text-sm text-center">Carboidrati</th>
+        <th class="p-3 text-sm text-center">Grassi</th>
+        <th class="p-3 text-sm text-center">Azioni</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pasto in pasti %}
+      <tr class="border-b hover:bg-gray-50 text-sm">
+        <td class="p-2 whitespace-nowrap">{{ pasto.data_ora }}</td>
+        <td class="p-2">{{ pasto.tipo }}</td>
+        <td class="p-2">{{ pasto.descrizione }}</td>
+        <td class="p-2 text-center">{{ pasto.calorie }}</td>
+        <td class="p-2 text-center">{{ pasto.proteine }}</td>
+        <td class="p-2 text-center">{{ pasto.carboidrati }}</td>
+        <td class="p-2 text-center">{{ pasto.grassi }}</td>
+        <td class="p-2 text-center space-x-2">
+          <a href="{{ url_for('modifica_pasto', index=loop.index0) }}" class="text-blue-600 hover:underline">Modifica</a>
+          <form action="{{ url_for('elimina_pasto', index=loop.index0) }}" method="post"
+                style="display:inline;" onsubmit="return confirm('Sei sicuro di voler eliminare questo pasto?');">
+            <button type="submit"
+                    class="text-red-600 hover:underline bg-transparent border-0 cursor-pointer p-0">Elimina</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="8" class="text-center text-gray-500 p-4 text-sm">Nessun pasto inserito</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}

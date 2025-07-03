@@ -2,63 +2,60 @@
 {% block content %}
 <h2 class="text-2xl font-semibold mb-6 text-center">Il Mio Profilo</h2>
 
-<form method="POST" class="bg-white shadow rounded p-6 w-full max-w-sm mx-auto">
-  <label class="block mb-3">
-    Nome:
-    <input type="text" name="nome" value="{{ user.nome }}" required class="border p-2 w-full rounded mt-1">
-  </label>
+<form method="POST" class="bg-white shadow rounded-lg p-6 w-full max-w-md mx-auto space-y-4">
 
-  <label class="block mb-3">
-    Cognome:
-    <input type="text" name="cognome" value="{{ user.cognome }}" required class="border p-2 w-full rounded mt-1">
-  </label>
+  {% set fields = [
+    ("nome", "Nome", "text", user.nome),
+    ("cognome", "Cognome", "text", user.cognome),
+    ("email", "Email", "email", user.email),
+    ("eta", "Età", "number", user.eta),
+    ("peso_iniziale", "Peso iniziale (kg)", "number", user.peso_iniziale),
+    ("altezza", "Altezza (cm)", "number", user.altezza)
+  ] %}
 
-  <label class="block mb-3">
-    Email:
-    <input type="email" name="email" value="{{ user.email }}" required class="border p-2 w-full rounded mt-1" placeholder="Inserisci email">
+  {% for name, label, type, value in fields %}
+  <label class="block">
+    <span class="text-gray-700 font-medium">{{ label }}:</span>
+    <input type="{{ type }}" name="{{ name }}" value="{{ value }}" required
+           class="mt-1 w-full border rounded p-2 focus:outline-none focus:ring focus:border-blue-400">
   </label>
+  {% endfor %}
 
-  <label class="block mb-3">
-    Sesso:
-    <select name="sesso" required class="border p-2 w-full rounded mt-1">
+  <label class="block">
+    <span class="text-gray-700 font-medium">Sesso:</span>
+    <select name="sesso" required class="mt-1 w-full border rounded p-2">
       <option value="M" {% if user.sesso == 'M' %}selected{% endif %}>Maschile</option>
       <option value="F" {% if user.sesso == 'F' %}selected{% endif %}>Femminile</option>
       <option value="O" {% if user.sesso == 'O' %}selected{% endif %}>Altro</option>
     </select>
   </label>
 
-  <label class="block mb-3">
-    Età:
-    <input type="number" name="eta" min="1" max="120" value="{{ user.eta }}" required class="border p-2 w-full rounded mt-1">
-  </label>
-
-  <label class="block mb-3">
-    Peso iniziale (kg):
-    <input type="number" name="peso_iniziale" step="0.1" min="1" value="{{ user.peso_iniziale }}" required class="border p-2 w-full rounded mt-1">
-  </label>
-
-  <label class="block mb-3">
-    Altezza (cm):
-    <input type="number" name="altezza" min="30" max="300" value="{{ user.altezza }}" required class="border p-2 w-full rounded mt-1">
-  </label>
-
   <hr class="my-4">
 
-  <label class="block mb-3">
-    Nuova password:
-    <input type="password" name="password" class="border p-2 w-full rounded mt-1" placeholder="Lascia vuoto per mantenere">
+  <label class="block">
+    <span class="text-gray-700 font-medium">Nuova password:</span>
+    <input type="password" name="password" placeholder="Lascia vuoto per mantenere"
+           class="mt-1 w-full border rounded p-2">
   </label>
 
-  <label class="block mb-6">
-    Conferma nuova password:
-    <input type="password" name="conferma_password" class="border p-2 w-full rounded mt-1" placeholder="Lascia vuoto per mantenere">
+  <label class="block">
+    <span class="text-gray-700 font-medium">Conferma nuova password:</span>
+    <input type="password" name="conferma_password" placeholder="Lascia vuoto per mantenere"
+           class="mt-1 w-full border rounded p-2">
   </label>
 
-  <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">Aggiorna Profilo</button>
+  <button type="submit"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded">
+    Aggiorna Profilo
+  </button>
 </form>
 
-<form method="POST" action="{{ url_for('cancella_account') }}" onsubmit="return confirm('Sei sicuro di voler cancellare il tuo account? Questa azione è irreversibile.');" class="max-w-sm mx-auto mt-8">
-  <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 w-full">Cancella Account</button>
+<form method="POST" action="{{ url_for('cancella_account') }}"
+      onsubmit="return confirm('Sei sicuro di voler cancellare il tuo account? Questa azione è irreversibile.');"
+      class="max-w-md mx-auto mt-6">
+  <button type="submit"
+          class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded">
+    Cancella Account
+  </button>
 </form>
-
 {% endblock %}

@@ -2,31 +2,41 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FitTracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
-  <header class="bg-green-600 text-white p-4 flex justify-between items-center shadow">
-    <h1 class="text-xl font-bold">FitTracker</h1>
-    <nav>
-      <a href="{{ url_for('home') }}" class="mr-4 hover:underline">Home</a>
-      {% if request.referrer %}
-      <a href="{{ request.referrer }}" class="mr-4 hover:underline">Indietro</a>
-      {% endif %}
-      {% if session.get("username") %}
-      <a href="{{ url_for('logout') }}" class="hover:underline">Logout</a>
-      {% endif %}
-    </nav>
+<body class="bg-gray-100 text-gray-800 font-sans leading-relaxed">
+
+  <!-- Header principale -->
+  <header class="bg-green-600 text-white px-4 py-3 shadow">
+    <div class="max-w-screen-xl mx-auto flex justify-between items-center flex-wrap">
+      <h1 class="text-xl font-bold">FitTracker</h1>
+
+      <nav class="flex flex-wrap items-center gap-4 text-sm mt-2 sm:mt-0">
+        <a href="{{ url_for('home') }}" class="hover:underline">Home</a>
+        {% if request.referrer %}
+          <a href="{{ request.referrer }}" class="hover:underline">Indietro</a>
+        {% endif %}
+        {% if session.get("username") %}
+          <a href="{{ url_for('logout') }}" class="hover:underline">Logout</a>
+        {% endif %}
+      </nav>
+    </div>
   </header>
-  <main class="p-6">
+
+  <!-- Contenuto principale -->
+  <main class="p-4 sm:p-6 max-w-screen-xl mx-auto">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div class="bg-yellow-100 text-yellow-800 p-2 rounded mb-4">
+        <div class="bg-yellow-100 text-yellow-800 p-3 rounded mb-4 border border-yellow-300 text-sm">
           {{ messages[0] }}
         </div>
       {% endif %}
     {% endwith %}
+
     {% block content %}{% endblock %}
   </main>
+
 </body>
 </html>

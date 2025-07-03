@@ -1,53 +1,42 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2 class="text-2xl font-semibold mb-4">Modifica Pesata</h2>
-<form method="post" class="bg-white shadow rounded p-6 max-w-xl space-y-4">
-  <label class="block">
-    Data e ora:
-    <input type="text" name="data_ora" value="{{ pesata.data_ora }}" required class="border p-2 w-full rounded mt-1"/>
-    <small class="text-gray-500">Formato: gg/mm/aaaa - hh:mm</small>
-  </label>
+<div class="flex flex-col items-center justify-center min-h-[60vh]">
+  <h2 class="text-2xl font-semibold mb-6 text-center">Modifica Pesata</h2>
 
-  <label class="block">
-    Peso (kg):
-    <input type="number" step="0.01" name="peso" value="{{ pesata.peso }}" required class="border p-2 w-full rounded mt-1"/>
-  </label>
+  <form method="post" class="bg-white shadow-md rounded-lg p-6 w-full max-w-3xl space-y-6">
 
-  <label class="block">
-    BMI:
-    <input type="number" step="0.01" name="bmi" value="{{ pesata.bmi }}" required class="border p-2 w-full rounded mt-1"/>
-  </label>
+    <label class="block">
+      <span class="text-gray-700 font-medium">Data e ora:</span>
+      <input type="text" name="data_ora" value="{{ pesata.data_ora }}"
+             class="mt-1 w-full border rounded p-2 focus:outline-none focus:ring focus:border-blue-400" required>
+      <small class="text-gray-500">Formato: gg/mm/aaaa - hh:mm</small>
+    </label>
 
-  <label class="block">
-    Grasso corporeo (%):
-    <input type="number" step="0.01" name="grasso_corporeo" value="{{ pesata.grasso_corporeo }}" required class="border p-2 w-full rounded mt-1"/>
-  </label>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% set campi = [
+        ("peso", "Peso (kg)", 0.01),
+        ("bmi", "BMI", 0.01),
+        ("grasso_corporeo", "Grasso corporeo (%)", 0.01),
+        ("muscolo_scheletrico", "Muscolo scheletrico (%)", 0.01),
+        ("massa_muscolare", "Massa muscolare (kg)", 0.01),
+        ("acqua_corporea", "Acqua corporea (%)", 0.01),
+        ("bmr", "BMR (kcal)", 1),
+        ("eta_metabolica", "Età metabolica", 1)
+      ] %}
 
-  <label class="block">
-    Muscolo scheletrico (%):
-    <input type="number" step="0.01" name="muscolo_scheletrico" value="{{ pesata.muscolo_scheletrico }}" required class="border p-2 w-full rounded mt-1"/>
-  </label>
+      {% for name, label, step in campi %}
+      <label class="block">
+        <span class="text-gray-700 font-medium">{{ label }}:</span>
+        <input type="number" step="{{ step }}" name="{{ name }}" value="{{ pesata[name] }}"
+               class="mt-1 w-full border rounded p-2 focus:outline-none focus:ring focus:border-blue-400" required>
+      </label>
+      {% endfor %}
+    </div>
 
-  <label class="block">
-    Massa muscolare (kg):
-    <input type="number" step="0.01" name="massa_muscolare" value="{{ pesata.massa_muscolare }}" required class="border p-2 w-full rounded mt-1"/>
-  </label>
-
-  <label class="block">
-    Acqua corporea (%):
-    <input type="number" step="0.01" name="acqua_corporea" value="{{ pesata.acqua_corporea }}" required class="border p-2 w-full rounded mt-1"/>
-  </label>
-
-  <label class="block">
-    BMR (kcal):
-    <input type="number" step="1" name="bmr" value="{{ pesata.bmr }}" required class="border p-2 w-full rounded mt-1"/>
-  </label>
-
-  <label class="block">
-    Età metabolica:
-    <input type="number" step="1" name="eta_metabolica" value="{{ pesata.eta_metabolica }}" required class="border p-2 w-full rounded mt-1"/>
-  </label>
-
-  <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Salva Modifiche</button>
-</form>
+    <button type="submit"
+            class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded">
+      Salva Modifiche
+    </button>
+  </form>
+</div>
 {% endblock %}

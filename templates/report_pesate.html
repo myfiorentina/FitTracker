@@ -1,20 +1,29 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2 class="text-2xl font-semibold mb-4">Report Pesate Giornalieri</h2>
+<h2 class="text-2xl font-semibold mb-6 text-center">Report Pesate Giornalieri</h2>
 
-<!-- Form + Pulsanti rapidi -->
-<form method="POST" class="mb-6 flex flex-wrap items-center gap-4">
-  <label class="flex flex-col">
-    Data inizio:
-    <input type="date" name="start_date" value="{{ start_date }}" class="border rounded px-2 py-1">
-  </label>
-  <label class="flex flex-col">
-    Data fine:
-    <input type="date" name="end_date" value="{{ end_date }}" class="border rounded px-2 py-1">
-  </label>
-  <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Filtra</button>
+<!-- Form + Pulsanti -->
+<form method="POST"
+      class="mb-6 flex flex-col sm:flex-row sm:flex-wrap items-center gap-4 justify-center">
 
-  <div class="flex flex-wrap gap-2 ml-4 mt-2">
+  <div class="flex flex-col sm:flex-row items-center gap-2">
+    <label class="font-medium">Data inizio:</label>
+    <input type="date" name="start_date" value="{{ start_date }}" 
+           class="border rounded px-3 py-2 w-40">
+  </div>
+
+  <div class="flex flex-col sm:flex-row items-center gap-2">
+    <label class="font-medium">Data fine:</label>
+    <input type="date" name="end_date" value="{{ end_date }}" 
+           class="border rounded px-3 py-2 w-40">
+  </div>
+
+  <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+    Filtra
+  </button>
+
+  <!-- Pulsanti rapidi -->
+  <div class="flex gap-2 overflow-x-auto mt-2 sm:mt-0 sm:ml-4 whitespace-nowrap">
     <a href="{{ url_for('report_pesate') }}?start_date={{ (oggi - timedelta(days=7)).strftime('%Y-%m-%d') }}&end_date={{ oggi.strftime('%Y-%m-%d') }}"
        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Ultima Settimana</a>
     <a href="{{ url_for('report_pesate') }}?start_date={{ (oggi - timedelta(days=14)).strftime('%Y-%m-%d') }}&end_date={{ oggi.strftime('%Y-%m-%d') }}"
@@ -26,33 +35,17 @@
   </div>
 </form>
 
-<!-- Griglia dei grafici -->
-<div class="grid-container">
+<!-- Griglia grafici -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-2">
   {% for campo, dati in pesate_data.items() %}
-  <div class="grid-item">
-    <h3 class="font-semibold mb-2" id="{{ campo }}Label"></h3>
-    <canvas id="{{ campo }}Chart"></canvas>
+  <div class="bg-white p-4 rounded shadow">
+    <h3 class="font-semibold mb-2 text-center text-sm" id="{{ campo }}Label"></h3>
+    <div class="relative h-[250px]">
+      <canvas id="{{ campo }}Chart" class="w-full h-full"></canvas>
+    </div>
   </div>
   {% endfor %}
 </div>
-
-<style>
-  .grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-  }
-  .grid-item {
-    background: white;
-    padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 0 8px rgb(0 0 0 / 0.1);
-  }
-  canvas {
-    width: 100% !important;
-    height: 250px !important;
-  }
-</style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -120,13 +113,16 @@
         plugins: {
           tooltip: { enabled: true },
           legend: {
-            display: true,
-            position: 'top',
-            labels: { font: { size: 12 } }
+            display: false
           }
         },
         scales: {
-          x: { title: { display: true, text: 'Data' } },
+          x: {
+            title: {
+              display: true,
+              text: 'Data'
+            }
+          },
           y: {
             beginAtZero: false,
             grace: '5%',

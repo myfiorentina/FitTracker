@@ -1,31 +1,99 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2 class="text-2xl font-semibold mb-4">Inserisci un Pasto</h2>
-<form method="post" class="bg-white p-6 rounded shadow max-w-lg">
-  <label class="block mb-4">
-    Tipo di Pasto:
-    <select name="tipo" required class="w-full border rounded p-2 mt-1">
-      <option>Colazione</option>
-      <option>Spuntino Mattutino</option>
-      <option>Pranzo</option>
-      <option>Spuntino Pomeridiano</option>
-      <option>Cena</option>
-      <option>Extra</option>
-    </select>
-  </label>
+<style>
+  .form-container {
+    max-width: 720px;
+    margin: 20px auto;
+    background: #f9fafb;
+    padding: 24px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.06);
+  }
 
-  <label class="block mb-4">
-    Data e Ora:
-    <input type="datetime-local" name="data" value="{{ ora_corrente }}" class="w-full border rounded p-2 mt-1">
-  </label>
+  h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
 
-  <label class="block mb-4">
-    Descrizione del pasto:
-    <textarea name="descrizione" rows="4" required class="w-full border rounded p-2 mt-1" placeholder="Esempio: 100g pollo, 1 mela, 1 cucchiaio d'olio..."></textarea>
-  </label>
+  label {
+    display: block;
+    margin-bottom: 16px;
+  }
 
-  <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-    Salva Pasto
-  </button>
-</form>
+  label span {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #444;
+  }
+
+  select, input[type="datetime-local"], textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: white;
+    box-sizing: border-box;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    background-color: #16a34a;
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #15803d;
+  }
+
+  @media (max-width: 500px) {
+    h2 {
+      font-size: 1.25rem;
+    }
+  }
+</style>
+
+<div class="form-container">
+  <h2>Inserisci un Pasto</h2>
+  <form method="post" novalidate>
+    <label>
+      <span>Tipo di Pasto:</span>
+      <select name="tipo" required>
+        <option>Colazione</option>
+        <option>Spuntino Mattutino</option>
+        <option>Pranzo</option>
+        <option>Spuntino Pomeridiano</option>
+        <option>Cena</option>
+        <option>Extra</option>
+      </select>
+    </label>
+
+    <label>
+      <span>Data e Ora:</span>
+      <input type="datetime-local" name="data" value="{{ ora_corrente }}" required>
+    </label>
+
+    <label>
+      <span>Descrizione del pasto:</span>
+      <textarea name="descrizione" rows="4" required placeholder="Esempio: 100g pollo, 1 mela, 1 cucchiaio d'olio..."></textarea>
+    </label>
+
+    <button type="submit">Salva Pasto</button>
+  </form>
+</div>
 {% endblock %}

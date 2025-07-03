@@ -1,43 +1,43 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2 class="text-2xl font-semibold mb-4">Storico Pesate</h2>
+<h2 class="text-2xl font-semibold mb-6 text-center">Storico Pesate</h2>
 
-<div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
   {% for pesata in pesate %}
-    <div class="bg-gray-100 rounded-lg p-4 shadow">
-      <div class="text-sm font-semibold mb-2">Data: {{ pesata.data_ora }}</div>
+  <div class="bg-white rounded-lg shadow p-4 space-y-1 text-sm">
+    <div class="text-xs text-gray-500 font-medium mb-1">Data: {{ pesata.data_ora }}</div>
+    
+    <div><strong>Peso:</strong> <span class="text-red-600">{{ pesata.peso }} kg</span></div>
+    <div><strong>BMI:</strong> <span class="text-red-600">{{ pesata.bmi }}</span></div>
+    <div><strong>Grasso Corporeo:</strong> <span class="text-red-600">{{ pesata.grasso_corporeo }} %</span></div>
 
-      <div><span class="font-semibold">Peso:</span> <span class="text-red-600">{{ pesata.peso }} kg</span></div>
-      <div><span class="font-semibold">BMI:</span> <span class="text-red-600">{{ pesata.bmi }}</span></div>
-      <div><span class="font-semibold">Grasso corporeo:</span> <span class="text-red-600">{{ pesata.grasso_corporeo }} %</span></div>
+    <div><strong>Muscolo Scheletrico:</strong> <span class="text-blue-600">{{ pesata.muscolo_scheletrico }} %</span></div>
+    <div><strong>Peso senza grassi:</strong> <span class="text-green-600">{{ pesata.peso_senza_grassi }} kg</span></div>
+    <div><strong>Grasso Sottocutaneo:</strong> <span class="text-yellow-600">{{ pesata.grasso_sottocutaneo }} %</span></div>
+    <div><strong>Grasso Viscerale:</strong> <span class="text-yellow-600">{{ pesata.grasso_viscerale }}</span></div>
 
-      <div><span class="font-semibold">Muscolo scheletrico:</span> <span class="text-blue-500">{{ pesata.muscolo_scheletrico }} %</span></div>
-      <div><span class="font-semibold">Peso senza grassi:</span> <span class="text-green-600">{{ pesata.peso_senza_grassi }} kg</span></div>
-      <div><span class="font-semibold">Grasso sottocutaneo:</span> <span class="text-yellow-500">{{ pesata.grasso_sottocutaneo }} %</span></div>
+    <div><strong>Acqua Corporea:</strong> <span class="text-blue-600">{{ pesata.acqua_corporea }} %</span></div>
+    <div><strong>Massa Muscolare:</strong> <span class="text-green-600">{{ pesata.massa_muscolare }} kg</span></div>
+    <div><strong>Massa Ossea:</strong> <span class="text-green-600">{{ pesata.massa_ossea }} kg</span></div>
 
-      <div><span class="font-semibold">Grasso viscerale:</span> <span class="text-yellow-500">{{ pesata.grasso_viscerale }}</span></div>
-      <div><span class="font-semibold">Acqua corporea:</span> <span class="text-blue-500">{{ pesata.acqua_corporea }} %</span></div>
-      <div><span class="font-semibold">Massa muscolare:</span> <span class="text-green-600">{{ pesata.massa_muscolare }} kg</span></div>
+    <div><strong>Proteine:</strong> <span class="text-blue-600">{{ pesata.proteine }} %</span></div>
+    <div><strong>BMR:</strong> <span class="text-yellow-600">{{ pesata.bmr }} kcal</span></div>
+    <div><strong>Età Metabolica:</strong> <span class="text-yellow-600">{{ pesata.eta_metabolica }}</span></div>
 
-      <div><span class="font-semibold">Massa ossea:</span> <span class="text-green-600">{{ pesata.massa_ossea }} kg</span></div>
-      <div><span class="font-semibold">Proteine:</span> <span class="text-blue-500">{{ pesata.proteine }} %</span></div>
-      <div><span class="font-semibold">BMR:</span> <span class="text-yellow-500">{{ pesata.bmr }} kcal</span></div>
-
-      <div><span class="font-semibold">Età metabolica:</span> <span class="text-yellow-500">{{ pesata.eta_metabolica }}</span></div>
-
-      <div class="mt-2 flex space-x-4">
-        <form method="post" action="{{ url_for('elimina_pesata', index=loop.index0) }}" onsubmit="return confirm('Eliminare questa pesata?');">
-          <button type="submit" class="text-red-600 hover:underline">Elimina</button>
-        </form>
-        <a href="{{ url_for('modifica_pesata', index=loop.index0) }}" class="text-blue-600 hover:underline">Modifica</a>
-      </div>
+    <div class="pt-2 flex justify-between text-sm">
+      <a href="{{ url_for('modifica_pesata', index=loop.index0) }}" class="text-blue-600 hover:underline">Modifica</a>
+      <form method="post" action="{{ url_for('elimina_pesata', index=loop.index0) }}"
+            onsubmit="return confirm('Eliminare questa pesata?');">
+        <button type="submit" class="text-red-600 hover:underline">Elimina</button>
+      </form>
     </div>
+  </div>
   {% else %}
-    <p>Nessuna pesata registrata.</p>
+  <div class="col-span-full text-center text-gray-500">Nessuna pesata registrata.</div>
   {% endfor %}
 </div>
 
-<div class="mt-4">
-  <a href="{{ url_for('home') }}" class="text-blue-600 hover:underline">Torna alla Home</a>
+<div class="mt-6 text-center">
+  <a href="{{ url_for('home') }}" class="text-blue-600 hover:underline">← Torna alla Home</a>
 </div>
 {% endblock %}

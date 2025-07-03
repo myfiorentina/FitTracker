@@ -1,79 +1,108 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2 class="text-2xl font-semibold mb-4">Analisi Pesature</h2>
+<h2 class="text-2xl font-semibold mb-4 text-center">Analisi Pesature</h2>
 
-<form method="get" class="mb-6 flex flex-wrap items-center gap-2">
-  <label for="start_date">Dal:</label>
-  <input type="date" name="start_date" value="{{ start_date }}" required>
-  <label for="end_date">Al:</label>
-  <input type="date" name="end_date" value="{{ end_date }}" required>
-  <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded">Analizza</button>
+<!-- FORM + Pulsanti rapidi -->
+<form method="get" class="mb-6 space-y-4 md:space-y-0 md:flex md:flex-wrap md:items-center md:gap-3">
+  <div class="flex flex-col md:flex-row md:items-center gap-2">
+    <label for="start_date" class="font-medium">Dal:</label>
+    <input type="date" name="start_date" id="start_date" value="{{ start_date }}" required
+           class="border rounded px-2 py-1 text-sm">
+  </div>
 
-  <div class="flex flex-wrap gap-2 ml-4">
+  <div class="flex flex-col md:flex-row md:items-center gap-2">
+    <label for="end_date" class="font-medium">Al:</label>
+    <input type="date" name="end_date" id="end_date" value="{{ end_date }}" required
+           class="border rounded px-2 py-1 text-sm">
+  </div>
+
+  <button type="submit"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm">
+    Analizza
+  </button>
+
+  <!-- Pulsanti scelta rapida -->
+  <div class="flex flex-wrap gap-2 mt-2 md:mt-0 md:ml-4">
     <a href="{{ url_for('analisi_pesature', start_date=(oggi - timedelta(days=7)).isoformat(), end_date=oggi.isoformat()) }}"
-       class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">Ultima Settimana</a>
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Ultima Settimana</a>
     <a href="{{ url_for('analisi_pesature', start_date=(oggi - timedelta(days=14)).isoformat(), end_date=oggi.isoformat()) }}"
-       class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">Ultime 2 Settimane</a>
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Ultime 2 Settimane</a>
     <a href="{{ url_for('analisi_pesature', start_date=(oggi - timedelta(days=30)).isoformat(), end_date=oggi.isoformat()) }}"
-       class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">Mensile</a>
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Mensile</a>
     <a href="{{ url_for('analisi_pesature', start_date='2000-01-01', end_date=oggi.isoformat()) }}"
-       class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">Totale</a>
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Totale</a>
   </div>
 </form>
 
+<!-- GRAFICI -->
 {% if labels %}
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div>
-      <h3 class="text-lg font-semibold mb-1">Peso</h3>
-      <canvas id="pesoChart"></canvas>
-    </div>
-    <div>
-      <h3 class="text-lg font-semibold mb-1">BMI</h3>
-      <canvas id="bmiChart"></canvas>
-    </div>
-    <div>
-      <h3 class="text-lg font-semibold mb-1">Grasso Corporeo (%)</h3>
-      <canvas id="grassoChart"></canvas>
-    </div>
-    <div>
-      <h3 class="text-lg font-semibold mb-1">Grasso Sottocutaneo (%)</h3>
-      <canvas id="grassoSottoChart"></canvas>
-    </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div>
+    <h3 class="text-lg font-semibold mb-1">Peso (kg)</h3>
+    <canvas id="pesoChart"></canvas>
   </div>
+  <div>
+    <h3 class="text-lg font-semibold mb-1">BMI</h3>
+    <canvas id="bmiChart"></canvas>
+  </div>
+  <div>
+    <h3 class="text-lg font-semibold mb-1">Grasso Corporeo (%)</h3>
+    <canvas id="grassoChart"></canvas>
+  </div>
+  <div>
+    <h3 class="text-lg font-semibold mb-1">Grasso Sottocutaneo (%)</h3>
+    <canvas id="grassoSottoChart"></canvas>
+  </div>
+</div>
 
-  <script>
-    const labels = {{ labels | tojson }};
-    const grafico = (id, label, data, color) => {
-      new Chart(document.getElementById(id).getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: label,
-            data: data,
-            borderColor: color,
-            tension: 0.3,
-            fill: false
-          }]
+<script>
+  const labels = {{ labels | tojson }};
+  const grafico = (id, label, data, color) => {
+    new Chart(document.getElementById(id).getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: label,
+          data: data,
+          borderColor: color,
+          tension: 0.3,
+          fill: false,
+          pointRadius: 2,
+          pointHoverRadius: 5,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { font: { size: 12 } }
+          }
         },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: true } }
+        scales: {
+          x: { title: { display: true, text: 'Data' } },
+          y: { title: { display: true, text: 'Valore' }, grace: '5%' }
         }
-      });
-    };
+      }
+    });
+  };
 
-    grafico('pesoChart', 'Peso (kg)', {{ pesate_data["peso"] | tojson }}, 'rgba(54, 162, 235, 1)');
-    grafico('bmiChart', 'BMI', {{ pesate_data["bmi"] | tojson }}, 'rgba(153, 102, 255, 1)');
-    grafico('grassoChart', 'Grasso Corporeo (%)', {{ pesate_data["grasso_corporeo"] | tojson }}, 'rgba(255, 99, 132, 1)');
-    grafico('grassoSottoChart', 'Grasso Sottocutaneo (%)', {{ pesate_data["grasso_sottocutaneo"] | tojson }}, 'rgba(255, 159, 64, 1)');
-  </script>
+  grafico('pesoChart', 'Peso (kg)', {{ pesate_data["peso"] | tojson }}, 'rgba(54, 162, 235, 1)');
+  grafico('bmiChart', 'BMI', {{ pesate_data["bmi"] | tojson }}, 'rgba(153, 102, 255, 1)');
+  grafico('grassoChart', 'Grasso Corporeo (%)', {{ pesate_data["grasso_corporeo"] | tojson }}, 'rgba(255, 99, 132, 1)');
+  grafico('grassoSottoChart', 'Grasso Sottocutaneo (%)', {{ pesate_data["grasso_sottocutaneo"] | tojson }}, 'rgba(255, 159, 64, 1)');
+</script>
 
-  <div class="mt-6 bg-white shadow p-4 rounded">
-    <h3 class="text-xl font-semibold mb-2">Commento Composizione Corporea</h3>
-    <p>{{ commento.replace('\n', '<br>')|safe }}</p>
-  </div>
+<!-- COMMENTO -->
+<div class="mt-6 bg-white shadow p-4 rounded">
+  <h3 class="text-xl font-semibold mb-2">Commento Composizione Corporea</h3>
+  <p class="text-sm md:text-base">{{ commento.replace('\n', '<br>')|safe }}</p>
+</div>
 {% endif %}
 {% endblock %}
