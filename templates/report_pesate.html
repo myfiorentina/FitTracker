@@ -2,6 +2,7 @@
 {% block content %}
 <h2 class="text-2xl font-semibold mb-4">Report Pesate Giornalieri</h2>
 
+<!-- Form + Pulsanti rapidi -->
 <form method="POST" class="mb-6 flex flex-wrap items-center gap-4">
   <label class="flex flex-col">
     Data inizio:
@@ -12,8 +13,21 @@
     <input type="date" name="end_date" value="{{ end_date }}" class="border rounded px-2 py-1">
   </label>
   <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Filtra</button>
+
+  <!-- Pulsanti scelta rapida -->
+  <div class="flex flex-wrap gap-2 ml-4 mt-2">
+    <a href="{{ url_for('report_pesate') }}?start_date={{ (oggi - timedelta(days=7)).strftime('%Y-%m-%d') }}&end_date={{ oggi.strftime('%Y-%m-%d') }}"
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Ultima Settimana</a>
+    <a href="{{ url_for('report_pesate') }}?start_date={{ (oggi - timedelta(days=14)).strftime('%Y-%m-%d') }}&end_date={{ oggi.strftime('%Y-%m-%d') }}"
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Ultime 2 Settimane</a>
+    <a href="{{ url_for('report_pesate') }}?start_date={{ (oggi - timedelta(days=30)).strftime('%Y-%m-%d') }}&end_date={{ oggi.strftime('%Y-%m-%d') }}"
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Mensile</a>
+    <a href="{{ url_for('report_pesate') }}?start_date=2000-01-01&end_date={{ oggi.strftime('%Y-%m-%d') }}"
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Totale</a>
+  </div>
 </form>
 
+<!-- Griglia dei grafici -->
 <div class="grid-container">
   {% for campo, dati in pesate_data.items() %}
   <div class="grid-item">
@@ -46,7 +60,6 @@
   const labels = {{ labels|tojson }};
   const pesateData = {{ pesate_data|tojson }};
 
-  // Array colori per differenziare grafici
   const colors = [
     'rgba(75, 192, 192, 1)', 
     'rgba(255, 99, 132, 1)', 
@@ -85,33 +98,19 @@
           intersect: false
         },
         plugins: {
-          tooltip: {
-            enabled: true
-          },
+          tooltip: { enabled: true },
           legend: {
             display: true,
             position: 'top',
-            labels: {
-              font: {
-                size: 12
-              }
-            }
+            labels: { font: { size: 12 } }
           }
         },
         scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Data'
-            }
-          },
+          x: { title: { display: true, text: 'Data' } },
           y: {
             beginAtZero: false,
             grace: '5%',
-            title: {
-              display: true,
-              text: 'Valore'
-            }
+            title: { display: true, text: 'Valore' }
           }
         }
       }

@@ -3,7 +3,7 @@
 <h2 class="text-2xl font-semibold mb-6">Report Pasti Giornalieri</h2>
 
 <!-- Form per selezione intervallo date -->
-<form method="get" action="{{ url_for('report_pasti') }}" class="mb-6 flex flex-wrap items-center gap-4">
+<form method="get" action="{{ url_for('report_pasti') }}" class="mb-4 flex flex-wrap items-center gap-4">
   <label for="start_date" class="font-semibold">Da:</label>
   <input type="date" id="start_date" name="start_date" value="{{ start_date }}" required
          class="border border-gray-300 rounded px-2 py-1">
@@ -16,6 +16,18 @@
           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
     Mostra
   </button>
+
+  <!-- Pulsanti scelta rapida -->
+  <div class="flex flex-wrap gap-2 ml-4">
+    <a href="{{ url_for('report_pasti', start_date=(oggi - timedelta(days=7)).isoformat(), end_date=oggi.isoformat()) }}"
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Ultima Settimana</a>
+    <a href="{{ url_for('report_pasti', start_date=(oggi - timedelta(days=14)).isoformat(), end_date=oggi.isoformat()) }}"
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Ultime 2 Settimane</a>
+    <a href="{{ url_for('report_pasti', start_date=(oggi - timedelta(days=30)).isoformat(), end_date=oggi.isoformat()) }}"
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Mensile</a>
+    <a href="{{ url_for('report_pasti', start_date='2000-01-01', end_date=oggi.isoformat()) }}"
+       class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Totale</a>
+  </div>
 </form>
 
 <!-- Contenitore grafico full width -->

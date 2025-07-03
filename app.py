@@ -636,7 +636,9 @@ def report_pasti():
         carboidrati=carboidrati,
         grassi=grassi,
         start_date=start_date.strftime("%Y-%m-%d"),
-        end_date=end_date.strftime("%Y-%m-%d")
+        end_date=end_date.strftime("%Y-%m-%d"),
+        oggi=oggi,
+        timedelta=timedelta
     )
 
 @app.route("/report_pesate", methods=["GET", "POST"])
@@ -690,7 +692,9 @@ def report_pesate():
                            labels=labels,
                            pesate_data=pesate_data,
                            start_date=start_date,
-                           end_date=end_date)
+                           end_date=end_date,
+                           oggi=oggi,
+                           timedelta=timedelta)
 
 
 @app.route("/analisi_pasti", methods=["GET"])
