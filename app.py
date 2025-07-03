@@ -1063,28 +1063,55 @@ def elimina_utente(username):
         flash("Utente non trovato.")
     return redirect(url_for("admin_utenti"))
 
-@app.route("/forza_finalita")
+# ======================
+# FeedBack Route
+# ======================
+
+@app.route("/feedback", methods=["GET", "POST"])
 @login_required
-def forza_finalita():
-    path = "data/users.json"  # Modifica se hai un path diverso
+def feedback():
+    if request.method == "POST":
+        username = session["username"]
+        contenuto = request.form.get("contenuto", "").strip()
+
+        if not contenuto:
+            flash("Il campo del messaggio non può essere vuoto.")
+            return redirect(request.url)
+
+        feedback_data = {
+            "utente": username,
+            "data_ora": datetime.now().strftime("%d/%m/%Y - %H:%M"),
+            "contenuto": contenuto
+        }
+
+        with open("data/feedback.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(feedback_data) + "\n")
+
+        flash("Grazie per il tuo feedback!")
+        return redirect(url_for("feedback"))
+
+    return render_template("feedback.html")
+
+@app.route("/feedback_admin")
+@login_required
+def feedback_admin():
+    username = session.get("username")
+    if username != "myfiorentina":
+        flash("Accesso riservato all'amministratore.")
+        return redirect(url_for("home"))
+
+    feedback_list = []
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            utenti = json.load(f)
+        with open("data/feedback.jsonl", "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    feedback_list.append(json.loads(line))
+    except FileNotFoundError:
+        pass
 
-        modificato = False
-        for username, dati in utenti.items():
-            if "finalita" not in dati:
-                dati["finalita"] = "Perdita di peso"
-                modificato = True
+    feedback_list = sorted(feedback_list, key=lambda x: x["data_ora"], reverse=True)
 
-        if modificato:
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(utenti, f, indent=2, ensure_ascii=False)
-            return "Campo 'finalita' aggiunto a chi non ce l'ha."
-        else:
-            return "Tutti gli utenti hanno già il campo 'finalita'."
-    except Exception as e:
-        return f"Errore: {e}"
+    return render_template("feedback_admin.html", feedback_list=feedback_list)
 
 
 # ======================
