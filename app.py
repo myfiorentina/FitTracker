@@ -9,6 +9,7 @@ from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from collections import defaultdict
+import traceback
 
 USERS_FILE = "/data/users.json"
 PASTI_FILE = "/data/pasti.json"
@@ -142,7 +143,10 @@ def login():
         password = request.form["password"]
 
         try:
-            with open("utenti.json", "r", encoding="utf-8") as f:
+            # Percorso assoluto nel volume persistente montato da Fly.io
+            utenti_path = "/data/users.json"
+
+            with open(utenti_path, "r", encoding="utf-8") as f:
                 utenti = json.load(f)
 
             utente = utenti.get(username)
@@ -154,7 +158,7 @@ def login():
             else:
                 flash("Credenziali non valide.")
         except Exception as e:
-            logging.error(f"Errore durante il login: {e}")
+            logging.error("Traceback completo:\n" + traceback.format_exc())
             flash("Errore interno. Riprova più tardi.")
 
     return render_template("login.html")
@@ -687,6 +691,7 @@ def report_pesate():
                            pesate_data=pesate_data,
                            start_date=start_date,
                            end_date=end_date)
+
 
 @app.route("/analisi_pasti", methods=["GET"])
 @login_required

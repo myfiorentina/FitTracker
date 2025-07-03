@@ -10,19 +10,47 @@
 </div>
 {% endif %}
 
-<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-  <a href="{{ url_for('inserisci_pasto') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📋 Inserisci Pasto</a>
-  <a href="{{ url_for('storico_pasti') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📖 Storico Pasti</a>
-  <a href="{{ url_for('inserisci_pesata') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">⚖️ Inserisci Pesata</a>
-  <a href="{{ url_for('storico_pesate') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📊 Storico Pesate</a>
-  <a href="{{ url_for('report_pasti') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📈 Report Pasti</a>
-  <a href="{{ url_for('report_pesate') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📉 Report Pesate</a>
-  <a href="{{ url_for('analisi_pasti') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">📋 Analisi Pasti</a>
-  <a href="{{ url_for('analisi_pesature') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">⚖️ Analisi Pesature</a>
-  <a href="{{ url_for('profilo') }}" class="block bg-white p-4 rounded shadow hover:bg-gray-50">👤 Profilo</a>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
 
-  {% if session.get('is_admin') %}
-  <a href="{{ url_for('admin_utenti') }}" class="block bg-red-600 text-white p-4 rounded shadow hover:bg-red-700">🛠️ Gestione Utenti (Admin)</a>
-  {% endif %}
+  <!-- Riquadro Inserimenti -->
+  <div class="bg-white p-4 rounded shadow border">
+    <h3 class="text-lg font-semibold mb-4">📥 Inserimenti</h3>
+    <div class="grid grid-cols-1 gap-3">
+      <a href="{{ url_for('inserisci_pasto') }}" class="block bg-gray-100 p-3 rounded hover:bg-gray-200">📋 Inserisci Pasto</a>
+      <a href="{{ url_for('inserisci_pesata') }}" class="block bg-gray-100 p-3 rounded hover:bg-gray-200">⚖️ Inserisci Pesata</a>
+    </div>
+  </div>
+
+  <!-- Riquadro Storici -->
+  <div class="bg-white p-4 rounded shadow border">
+    <h3 class="text-lg font-semibold mb-4">📚 Storici</h3>
+    <div class="grid grid-cols-1 gap-3">
+      <a href="{{ url_for('storico_pasti') }}" class="block bg-gray-100 p-3 rounded hover:bg-gray-200">📖 Storico Pasti</a>
+      <a href="{{ url_for('storico_pesate') }}" class="block bg-gray-100 p-3 rounded hover:bg-gray-200">📊 Storico Pesate</a>
+    </div>
+  </div>
+
+  <!-- Riquadro Analisi -->
+  <div class="bg-white p-4 rounded shadow border">
+    <h3 class="text-lg font-semibold mb-4">📈 Analisi e Report</h3>
+    <div class="grid grid-cols-1 gap-3">
+      <a href="{{ url_for('report_pasti') }}" class="block bg-gray-100 p-3 rounded hover:bg-gray-200">📈 Report Pasti</a>
+      <a href="{{ url_for('report_pesate') }}" class="block bg-gray-100 p-3 rounded hover:bg-gray-200">📉 Report Pesate</a>
+      <a href="{{ url_for('analisi_pasti') }}" class="block bg-gray-100 p-3 rounded hover:bg-gray-200">📋 Analisi Pasti</a>
+      <a href="{{ url_for('analisi_pesature') }}" class="block bg-gray-100 p-3 rounded hover:bg-gray-200">⚖️ Analisi Pesature</a>
+    </div>
+  </div>
+
+  <!-- Riquadro Profilo e Admin -->
+  <div class="bg-white p-4 rounded shadow border">
+    <h3 class="text-lg font-semibold mb-4">⚙️ Profilo e Amministrazione</h3>
+    <div class="grid grid-cols-1 gap-3">
+      <a href="{{ url_for('profilo') }}" class="block bg-gray-100 p-3 rounded hover:bg-gray-200">👤 Profilo</a>
+      {% if session.get('role') == 'admin' %}
+      <a href="{{ url_for('admin_utenti') }}" class="block bg-red-600 text-white p-3 rounded hover:bg-red-700">🛠️ Gestione Utenti (Admin)</a>
+      {% endif %}
+    </div>
+  </div>
+
 </div>
 {% endblock %}
