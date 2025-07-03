@@ -30,16 +30,16 @@
       <canvas id="pesoChart"></canvas>
     </div>
     <div>
+      <h3 class="text-lg font-semibold mb-1">BMI</h3>
+      <canvas id="bmiChart"></canvas>
+    </div>
+    <div>
       <h3 class="text-lg font-semibold mb-1">Grasso Corporeo (%)</h3>
       <canvas id="grassoChart"></canvas>
     </div>
     <div>
-      <h3 class="text-lg font-semibold mb-1">Muscolo Scheletrico (%)</h3>
-      <canvas id="muscoloChart"></canvas>
-    </div>
-    <div>
-      <h3 class="text-lg font-semibold mb-1">Acqua Corporea (%)</h3>
-      <canvas id="acquaChart"></canvas>
+      <h3 class="text-lg font-semibold mb-1">Grasso Sottocutaneo (%)</h3>
+      <canvas id="grassoSottoChart"></canvas>
     </div>
   </div>
 
@@ -66,9 +66,9 @@
     };
 
     grafico('pesoChart', 'Peso (kg)', {{ pesate_data["peso"] | tojson }}, 'rgba(54, 162, 235, 1)');
+    grafico('bmiChart', 'BMI', {{ pesate_data["bmi"] | tojson }}, 'rgba(153, 102, 255, 1)');
     grafico('grassoChart', 'Grasso Corporeo (%)', {{ pesate_data["grasso_corporeo"] | tojson }}, 'rgba(255, 99, 132, 1)');
-    grafico('muscoloChart', 'Muscolo Scheletrico (%)', {{ pesate_data["muscolo_scheletrico"] | tojson }}, 'rgba(255, 206, 86, 1)');
-    grafico('acquaChart', 'Acqua Corporea (%)', {{ pesate_data["acqua_corporea"] | tojson }}, 'rgba(75, 192, 192, 1)');
+    grafico('grassoSottoChart', 'Grasso Sottocutaneo (%)', {{ pesate_data["grasso_sottocutaneo"] | tojson }}, 'rgba(255, 159, 64, 1)');
   </script>
 
   <div class="mt-6 bg-white shadow p-4 rounded">

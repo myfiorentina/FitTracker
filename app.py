@@ -141,13 +141,21 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        # ⚠️ Autenticazione semplificata (da adattare se hai un sistema utenti)
-        if username:  # puoi mettere anche una condizione più restrittiva
-            session["username"] = username
-            flash("Accesso effettuato con successo.")
-            return redirect(url_for("home"))
-        else:
-            flash("Credenziali non valide.")
+        try:
+            with open("utenti.json", "r", encoding="utf-8") as f:
+                utenti = json.load(f)
+
+            utente = utenti.get(username)
+            if utente and check_password_hash(utente["password"], password):
+                session["username"] = username
+                session["role"] = "admin" if utente.get("admin", False) else "user"
+                flash("Accesso effettuato con successo.")
+                return redirect(url_for("home"))
+            else:
+                flash("Credenziali non valide.")
+        except Exception as e:
+            logging.error(f"Errore durante il login: {e}")
+            flash("Errore interno. Riprova più tardi.")
 
     return render_template("login.html")
 
@@ -680,18 +688,16 @@ def report_pesate():
                            start_date=start_date,
                            end_date=end_date)
 
-@app.route("/analisi_pasti", methods=["GET", "POST"])
+@app.route("/analisi_pasti", methods=["GET"])
 @login_required
 def analisi_pasti():
     username = session["username"]
     oggi = datetime.now().date()
     default_start = oggi - timedelta(days=30)
 
-    # Controlla se ci sono dati in input (GET con start_date & end_date)
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
 
-    # Se non ci sono date, mostra solo il form
     if not start_date or not end_date:
         return render_template("analisi_pasti.html",
                                date_labels=[],
@@ -701,9 +707,10 @@ def analisi_pasti():
                                grassi=[],
                                start_date="",
                                end_date="",
-                               commento="")
+                               commento="",
+                               oggi=oggi,
+                               timedelta=timedelta)
 
-    # Altrimenti procedi con l’analisi
     try:
         start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
         end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
@@ -752,7 +759,10 @@ def analisi_pasti():
                            grassi=grassi,
                            start_date=start_date,
                            end_date=end_date,
-                           commento=commento)
+                           commento=commento,
+                           oggi=oggi,
+                           timedelta=timedelta)
+
 
 
 @app.route("/analisi_pesature", methods=["GET"])
@@ -804,13 +814,10 @@ def analisi_pesature():
 
     riassunto = ""
     for i, giorno in enumerate(labels):
-        if pesate_data["peso"][i] is not None:
-            riassunto += (
-                f"{giorno}: peso {pesate_data['peso'][i]}kg, "
-                f"grasso {pesate_data['grasso_corporeo'][i]}%, "
-                f"muscolo {pesate_data['muscolo_scheletrico'][i]}%, "
-                f"acqua {pesate_data['acqua_corporea'][i]}%\n"
-            )
+        valori = [f"{campo.replace('_', ' ')}: {pesate_data[campo][i]}" for campo in campi if pesate_data[campo][i] is not None]
+        if valori:
+            riassunto += f"{giorno}: " + ", ".join(valori) + "\n"
+
 
     prompt = (
         "Agisci come un nutrizionista esperto in composizione corporea. Analizza l’andamento "
