@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2>Report Pasti Giornalieri</h2>
+<h2 class="text-2xl font-semibold mb-6">Report Pasti Giornalieri</h2>
 
 <!-- Form per selezione intervallo date -->
 <form method="get" action="{{ url_for('report_pasti') }}" class="mb-6 flex flex-wrap items-center gap-4">
@@ -18,8 +18,10 @@
   </button>
 </form>
 
-<!-- Canvas grafico -->
-<canvas id="chartPasti" style="max-width: 700px; max-height: 400px;"></canvas>
+<!-- Contenitore grafico full width -->
+<div class="w-full max-w-screen-xl mx-auto px-4">
+  <canvas id="chartPasti" class="w-full h-[500px]"></canvas>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -71,6 +73,7 @@ const config = {
       intersect: false,
     },
     stacked: false,
+    maintainAspectRatio: false,
     scales: {
       y: {
         type: 'linear',
