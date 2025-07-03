@@ -687,9 +687,23 @@ def analisi_pasti():
     oggi = datetime.now().date()
     default_start = oggi - timedelta(days=30)
 
-    start_date = request.args.get("start_date", default_start.strftime("%Y-%m-%d"))
-    end_date = request.args.get("end_date", oggi.strftime("%Y-%m-%d"))
+    # Controlla se ci sono dati in input (GET con start_date & end_date)
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
 
+    # Se non ci sono date, mostra solo il form
+    if not start_date or not end_date:
+        return render_template("analisi_pasti.html",
+                               date_labels=[],
+                               calorie=[],
+                               proteine=[],
+                               carboidrati=[],
+                               grassi=[],
+                               start_date="",
+                               end_date="",
+                               commento="")
+
+    # Altrimenti procedi con l’analisi
     try:
         start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
         end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
@@ -699,7 +713,6 @@ def analisi_pasti():
 
     date, calorie, proteine, carboidrati, grassi = aggrega_pasti_per_giorno(username, start_dt, end_dt)
 
-    # Prepara descrizione per Gemini
     descrizione_periodo = ""
     for i in range(len(date)):
         descrizione_periodo += (
@@ -716,9 +729,7 @@ def analisi_pasti():
         "e dai consigli se opportuno. Usa tono incoraggiante e sintetico."
     )
 
-    # Chiamata a Gemini
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(gemini_url, json=payload)
 
@@ -743,23 +754,32 @@ def analisi_pasti():
                            end_date=end_date,
                            commento=commento)
 
-@app.route("/analisi_pesature", methods=["GET", "POST"])
+
+@app.route("/analisi_pesature", methods=["GET"])
 @login_required
 def analisi_pesature():
     username = session["username"]
-
     oggi = datetime.now().date()
-    default_start = oggi - timedelta(days=30)
 
-    if request.method == "POST":
-        start_date = request.form.get("start_date", default_start.strftime("%Y-%m-%d"))
-        end_date = request.form.get("end_date", oggi.strftime("%Y-%m-%d"))
-    else:
-        start_date = request.args.get("start_date", default_start.strftime("%Y-%m-%d"))
-        end_date = request.args.get("end_date", oggi.strftime("%Y-%m-%d"))
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
 
-    start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
-    end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+    if not start_date or not end_date:
+        return render_template("analisi_pesature.html",
+                               labels=[],
+                               pesate_data={},
+                               start_date="",
+                               end_date="",
+                               commento="",
+                               oggi=oggi,
+                               timedelta=timedelta)
+
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Formato data non valido.")
+        return redirect(url_for("analisi_pesature"))
 
     pesate = leggi_pesate_utente(username)
     filtered = [p for p in pesate if start_dt <= datetime.strptime(p["data_ora"], "%d/%m/%Y - %H:%M").date() <= end_dt]
@@ -769,7 +789,6 @@ def analisi_pesature():
              "peso_senza_grassi", "acqua_corporea", "massa_muscolare", "massa_ossea", "proteine", "bmr", "eta_metabolica"]
 
     pesate_data = {campo: [] for campo in campi}
-
     for label in labels:
         giorno_pesate = [p for p in filtered if datetime.strptime(p["data_ora"], "%d/%m/%Y - %H:%M").strftime("%d/%m/%Y") == label]
         for campo in campi:
@@ -783,11 +802,15 @@ def analisi_pesature():
     for i, campo in enumerate(campi):
         pesate_data[campo] = [item[i + 1] for item in zipped_data]
 
-    # ===== COMMENTO PERSONALIZZATO =====
     riassunto = ""
     for i, giorno in enumerate(labels):
         if pesate_data["peso"][i] is not None:
-            riassunto += f"{giorno}: peso {pesate_data['peso'][i]}kg, grasso {pesate_data['grasso_corporeo'][i]}%, muscolo {pesate_data['muscolo_scheletrico'][i]}%, acqua {pesate_data['acqua_corporea'][i]}%\n"
+            riassunto += (
+                f"{giorno}: peso {pesate_data['peso'][i]}kg, "
+                f"grasso {pesate_data['grasso_corporeo'][i]}%, "
+                f"muscolo {pesate_data['muscolo_scheletrico'][i]}%, "
+                f"acqua {pesate_data['acqua_corporea'][i]}%\n"
+            )
 
     prompt = (
         "Agisci come un nutrizionista esperto in composizione corporea. Analizza l’andamento "
@@ -798,7 +821,6 @@ def analisi_pesature():
     )
 
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(gemini_url, json=payload)
 
@@ -817,7 +839,10 @@ def analisi_pesature():
                            pesate_data=pesate_data,
                            start_date=start_date,
                            end_date=end_date,
-                           commento=commento)
+                           commento=commento,
+                           oggi=oggi,
+                           timedelta=timedelta)
+
 
 
 # ======================
