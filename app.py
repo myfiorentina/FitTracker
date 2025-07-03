@@ -645,23 +645,33 @@ def report_pasti():
 @login_required
 def report_pesate():
     username = session["username"]
-
     oggi = datetime.now().date()
     default_start = oggi - timedelta(days=30)
 
+    # Inizializzazione predefinita
+    start_date = default_start
+    end_date = oggi
+
+    # Se richiesta POST (dal form manuale)
     if request.method == "POST":
-        start_date = request.form.get("start_date", default_start.strftime("%Y-%m-%d"))
-        end_date = request.form.get("end_date", oggi.strftime("%Y-%m-%d"))
-    else:
-        start_date = default_start.strftime("%Y-%m-%d")
-        end_date = oggi.strftime("%Y-%m-%d")
+        start_date = datetime.strptime(request.form.get("start_date", default_start.strftime("%Y-%m-%d")), "%Y-%m-%d").date()
+        end_date = datetime.strptime(request.form.get("end_date", oggi.strftime("%Y-%m-%d")), "%Y-%m-%d").date()
 
+    # Se richiesta GET con parametri (da pulsanti rapidi)
+    elif request.method == "GET":
+        start_str = request.args.get("start_date")
+        end_str = request.args.get("end_date")
+        if start_str and end_str:
+            try:
+                start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+                end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+            except ValueError:
+                flash("Formato data non valido.")
+                return redirect(url_for("report_pesate"))
+
+    # Filtra le pesate
     pesate = leggi_pesate_utente(username)
-
-    start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
-    end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
-
-    filtered = [p for p in pesate if start_dt <= datetime.strptime(p["data_ora"], "%d/%m/%Y - %H:%M").date() <= end_dt]
+    filtered = [p for p in pesate if start_date <= datetime.strptime(p["data_ora"], "%d/%m/%Y - %H:%M").date() <= end_date]
 
     labels = sorted(set(datetime.strptime(p["data_ora"], "%d/%m/%Y - %H:%M").strftime("%d/%m/%Y") for p in filtered))
 
@@ -678,11 +688,7 @@ def report_pesate():
             pesate_data[campo].append(media)
 
     date_objs = [datetime.strptime(d, "%d/%m/%Y") for d in labels]
-
-    zipped_data = sorted(
-        zip(date_objs, *(pesate_data[campo] for campo in campi))
-    )
-
+    zipped_data = sorted(zip(date_objs, *(pesate_data[campo] for campo in campi)))
     labels = [d.strftime("%d/%m/%Y") for d in [item[0] for item in zipped_data]]
 
     for i, campo in enumerate(campi):
@@ -691,10 +697,11 @@ def report_pesate():
     return render_template("report_pesate.html",
                            labels=labels,
                            pesate_data=pesate_data,
-                           start_date=start_date,
-                           end_date=end_date,
+                           start_date=start_date.strftime("%Y-%m-%d"),
+                           end_date=end_date.strftime("%Y-%m-%d"),
                            oggi=oggi,
                            timedelta=timedelta)
+
 
 
 @app.route("/analisi_pasti", methods=["GET"])

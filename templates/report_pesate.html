@@ -14,7 +14,6 @@
   </label>
   <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Filtra</button>
 
-  <!-- Pulsanti scelta rapida -->
   <div class="flex flex-wrap gap-2 ml-4 mt-2">
     <a href="{{ url_for('report_pesate') }}?start_date={{ (oggi - timedelta(days=7)).strftime('%Y-%m-%d') }}&end_date={{ oggi.strftime('%Y-%m-%d') }}"
        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Ultima Settimana</a>
@@ -31,7 +30,7 @@
 <div class="grid-container">
   {% for campo, dati in pesate_data.items() %}
   <div class="grid-item">
-    <h3 class="font-semibold mb-2">{{ campo.replace('_', ' ').title() }}</h3>
+    <h3 class="font-semibold mb-2" id="{{ campo }}Label"></h3>
     <canvas id="{{ campo }}Chart"></canvas>
   </div>
   {% endfor %}
@@ -60,6 +59,22 @@
   const labels = {{ labels|tojson }};
   const pesateData = {{ pesate_data|tojson }};
 
+  const unitMap = {
+    peso: "kg",
+    bmi: "",
+    grasso_corporeo: "%",
+    grasso_sottocutaneo: "%",
+    grasso_viscerale: "",
+    muscolo_scheletrico: "%",
+    peso_senza_grassi: "kg",
+    acqua_corporea: "%",
+    massa_muscolare: "kg",
+    massa_ossea: "kg",
+    proteine: "%",
+    bmr: "kcal",
+    eta_metabolica: "anni"
+  };
+
   const colors = [
     'rgba(75, 192, 192, 1)', 
     'rgba(255, 99, 132, 1)', 
@@ -74,12 +89,17 @@
 
   for (const campo in pesateData) {
     const ctx = document.getElementById(campo + 'Chart').getContext('2d');
+    const unita = unitMap[campo] || "";
+    const labelChart = campo.replace(/_/g, ' ').toUpperCase() + (unita ? ` (${unita})` : "");
+    const labelDiv = document.getElementById(campo + 'Label');
+    labelDiv.innerText = labelChart;
+
     new Chart(ctx, {
       type: 'line',
       data: {
         labels: labels,
         datasets: [{
-          label: campo.replace(/_/g, ' ').toUpperCase(),
+          label: labelChart,
           data: pesateData[campo],
           borderColor: colors[colorIndex % colors.length],
           backgroundColor: colors[colorIndex % colors.length].replace('1)', '0.2)'),
@@ -110,7 +130,10 @@
           y: {
             beginAtZero: false,
             grace: '5%',
-            title: { display: true, text: 'Valore' }
+            title: {
+              display: true,
+              text: `Valore${unita ? ' (' + unita + ')' : ''}`
+            }
           }
         }
       }
