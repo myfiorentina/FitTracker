@@ -36,8 +36,35 @@
 
 {% if date_labels %}
 <!-- GRAFICO -->
-<div class="w-full overflow-x-auto">
-  <canvas id="graficoPasti" class="w-full max-w-4xl mx-auto" height="100"></canvas>
+<style>
+  #grafico-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+
+  .grafico-container {
+    min-width: 700px; /* min base per mobile */
+    max-width: 900px; /* max per desktop */
+    margin: auto;
+  }
+
+  canvas#graficoPasti {
+    width: 100% !important;
+    height: 300px !important;
+  }
+
+  @media (min-width: 1024px) {
+    canvas#graficoPasti {
+      height: 400px !important;
+    }
+  }
+</style>
+
+<div id="grafico-wrapper">
+  <div class="grafico-container">
+    <canvas id="graficoPasti"></canvas>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

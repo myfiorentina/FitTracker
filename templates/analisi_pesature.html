@@ -21,7 +21,6 @@
     Analizza
   </button>
 
-  <!-- Pulsanti scelta rapida -->
   <div class="flex flex-wrap gap-2 mt-2 md:mt-0 md:ml-4">
     <a href="{{ url_for('analisi_pesature', start_date=(oggi - timedelta(days=7)).isoformat(), end_date=oggi.isoformat()) }}"
        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Ultima Settimana</a>
@@ -38,22 +37,52 @@
 {% if labels %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<style>
+  .grafico-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 1rem;
+  }
+  .grafico-container {
+    min-width: 700px;
+    max-width: 900px;
+    margin: auto;
+  }
+  .grafico-container canvas {
+    width: 100% !important;
+    height: 300px !important;
+  }
+  @media (min-width: 1024px) {
+    .grafico-container canvas {
+      height: 400px !important;
+    }
+  }
+</style>
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div>
-    <h3 class="text-lg font-semibold mb-1">Peso (kg)</h3>
-    <canvas id="pesoChart"></canvas>
+  <div class="grafico-wrapper">
+    <div class="grafico-container">
+      <h3 class="text-lg font-semibold mb-1">Peso (kg)</h3>
+      <canvas id="pesoChart"></canvas>
+    </div>
   </div>
-  <div>
-    <h3 class="text-lg font-semibold mb-1">BMI</h3>
-    <canvas id="bmiChart"></canvas>
+  <div class="grafico-wrapper">
+    <div class="grafico-container">
+      <h3 class="text-lg font-semibold mb-1">BMI</h3>
+      <canvas id="bmiChart"></canvas>
+    </div>
   </div>
-  <div>
-    <h3 class="text-lg font-semibold mb-1">Grasso Corporeo (%)</h3>
-    <canvas id="grassoChart"></canvas>
+  <div class="grafico-wrapper">
+    <div class="grafico-container">
+      <h3 class="text-lg font-semibold mb-1">Grasso Corporeo (%)</h3>
+      <canvas id="grassoChart"></canvas>
+    </div>
   </div>
-  <div>
-    <h3 class="text-lg font-semibold mb-1">Grasso Sottocutaneo (%)</h3>
-    <canvas id="grassoSottoChart"></canvas>
+  <div class="grafico-wrapper">
+    <div class="grafico-container">
+      <h3 class="text-lg font-semibold mb-1">Grasso Sottocutaneo (%)</h3>
+      <canvas id="grassoSottoChart"></canvas>
+    </div>
   </div>
 </div>
 

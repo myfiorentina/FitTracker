@@ -220,6 +220,10 @@ def inserisci_pasto():
             flash("Data/Ora non valida. Usa formato gg/mm/aaaa - hh:mm (ora 00-23).")
             return redirect(request.url)
 
+        # Recupera finalità utente dal file users
+        users = load_users()
+        finalita = users.get(username, {}).get("finalita", "Perdita di peso")
+
         gemini_api_key = "AIzaSyAJ_U8NMEJAr7sk24uqjzJdOrxD9meFMr0"
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_api_key}"
 
@@ -231,7 +235,6 @@ def inserisci_pasto():
         )
 
         payload_nutrizione = {"contents": [{"parts": [{"text": prompt_nutrizione}]}]}
-
         response_nutrizione = requests.post(gemini_url, json=payload_nutrizione)
 
         calorie = proteine = carboidrati = grassi = "N/D"
@@ -257,7 +260,8 @@ def inserisci_pasto():
         try:
             prompt_commento = (
                 f"Agisci come un esperto nutrizionista. In base al seguente pasto e ai valori nutrizionali stimati, "
-                f"fornisci un breve commento utile per una persona che vuole perdere peso. Tono gentile e informativo.\n"
+                f"fornisci un breve commento utile per una persona che ha come obiettivo: {finalita}. "
+                f"Tono gentile e informativo.\n"
                 f"Tipo pasto: {tipo}\nDescrizione: {descrizione}\n"
                 f"Valori stimati: {calorie} kcal, {proteine} g proteine, {carboidrati} g carboidrati, {grassi} g grassi.\n"
                 f"Fornisci solo un oggetto JSON con campo 'commento'."
@@ -297,6 +301,7 @@ def inserisci_pasto():
     italy = pytz.timezone("Europe/Rome")
     default_ora = datetime.now(italy).strftime("%Y-%m-%dT%H:%M")
     return render_template("inserisci_pasto.html", default_ora=default_ora)
+
 
 
 @app.route("/storico_pasti")
@@ -352,17 +357,14 @@ def modifica_pasto(index):
     if request.method == "POST":
         tipo = request.form.get('tipo', '').strip()
         descrizione = request.form.get('descrizione', '').strip()
-
         data_ora_raw = request.form.get('data_ora', '').strip()
 
         try:
-            # Il browser invia data/ora locale senza timezone: assumiamo che sia in ora locale italiana
-            naive_dt = datetime.strptime(data_ora_raw, "%Y-%m-%dT%H:%M")
-            italy = pytz.timezone("Europe/Rome")
-            data_ora_obj = italy.localize(naive_dt)
-            data_ora = data_ora_obj.strftime("%d/%m/%Y - %H:%M")
-        except ValueError:
-            flash("Data/Ora non valida. Usa formato corretto.")
+            naive_dt = datetime.strptime(data_ora_raw, "%d/%m/%Y - %H:%M")
+            data_ora = naive_dt.strftime("%d/%m/%Y - %H:%M")
+        except ValueError as e:
+            logging.error(f"Errore parsing data_ora: {data_ora_raw} | Errore: {e}")
+            flash("Data/Ora non valida. Usa il formato corretto: gg/mm/aaaa - hh:mm.")
             return redirect(request.url)
 
         if not valida_data_ora(data_ora):
@@ -374,16 +376,19 @@ def modifica_pasto(index):
         pasto['data_ora'] = data_ora
 
         # === Recupero valori nutrizionali aggiornati tramite Gemini ===
-        gemini_api_key = "AIzaSyAJ_U8NMEJAr7sk24uqjzJdOrxD9meFMr0"
-        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_api_key}"
+        users = load_users()
+        finalita = users.get(username, {}).get("finalita", "Perdita di peso")
 
         prompt = (
+            f"L'obiettivo dell'utente è: {finalita}. "
             f"Fornisci solo un oggetto JSON con i seguenti campi: "
             f"calorie (in kcal), proteine (in grammi), carboidrati (in grammi), grassi (in grammi). "
             f"Esempio: {{\"calorie\": 250, \"proteine\": 10, \"carboidrati\": 20, \"grassi\": 5}}. "
             f"Descrizione del pasto: {descrizione}"
         )
 
+        gemini_api_key = "AIzaSyAJ_U8NMEJAr7sk24uqjzJdOrxD9meFMr0"
+        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_api_key}"
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
         try:
@@ -404,7 +409,7 @@ def modifica_pasto(index):
             logging.error(f"Errore durante la chiamata a Gemini per modifica pasto: {e}")
             flash("Errore nel recupero dei valori nutrizionali da Gemini.")
 
-        # Ricrea la lista dei pasti con il pasto aggiornato
+        # Ricostruzione file pasti
         nuovi_pasti = []
         try:
             with open(PASTI_FILE, "r", encoding="utf-8") as f:
@@ -426,6 +431,7 @@ def modifica_pasto(index):
         return redirect(url_for("storico_pasti"))
 
     return render_template("modifica_pasto.html", pasto=pasto, index=index)
+
 
 
 # ======================
@@ -743,13 +749,17 @@ def analisi_pasti():
             f"{carboidrati[i]}g carboidrati, {grassi[i]}g grassi.\n"
         )
 
+    users = load_users()
+    finalita = users.get(username, {}).get("finalita", "Perdita di peso")
+
     prompt = (
-        "Agisci come un nutrizionista esperto in piani alimentari per dimagrimento. "
+        f"L'utente ha come finalità: {finalita}. "
+        "Agisci come un nutrizionista esperto in piani alimentari personalizzati. "
         "Fornisci un commento obiettivo e motivante sull’andamento della dieta per questo periodo:\n"
         f"{descrizione_periodo}\n"
-        "Valuta se l’apporto calorico è coerente con una dieta ipocalorica per perdere peso. "
+        "Valuta se l’apporto calorico è coerente con l'obiettivo dichiarato. "
         "Commenta l’equilibrio tra macronutrienti (proteine, carboidrati, grassi) "
-        "e dai consigli se opportuno. Usa tono incoraggiante e sintetico."
+        "e dai consigli pratici e incoraggianti."
     )
 
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
@@ -778,6 +788,7 @@ def analisi_pasti():
                            commento=commento,
                            oggi=oggi,
                            timedelta=timedelta)
+
 
 
 
@@ -834,13 +845,16 @@ def analisi_pesature():
         if valori:
             riassunto += f"{giorno}: " + ", ".join(valori) + "\n"
 
+    users = load_users()
+    finalita = users.get(username, {}).get("finalita", "Perdita di peso")
 
     prompt = (
-        "Agisci come un nutrizionista esperto in composizione corporea. Analizza l’andamento "
-        "di peso, grasso corporeo, muscolo e idratazione nel seguente intervallo:\n"
+        f"L'obiettivo dell'utente è: {finalita}. "
+        "Agisci come un nutrizionista esperto in composizione corporea. "
+        "Analizza l’andamento di peso, grasso corporeo, muscoli e idratazione nel seguente intervallo:\n"
         f"{riassunto}\n"
-        "Commenta se ci sono miglioramenti coerenti con un obiettivo di dimagrimento sano. "
-        "Evidenzia eventuali oscillazioni anomale o segnali positivi. Dai consigli sintetici."
+        "Commenta se ci sono miglioramenti coerenti con l’obiettivo indicato, segnala eventuali oscillazioni, "
+        "e fornisci consigli pratici e incoraggianti."
     )
 
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
@@ -868,6 +882,7 @@ def analisi_pesature():
 
 
 
+
 # ======================
 # Route Registrazione e Profilo
 # ======================
@@ -885,10 +900,8 @@ def register():
         eta = request.form.get("eta", "")
         peso_iniziale = request.form.get("peso_iniziale", "")
         altezza = request.form.get("altezza", "")
+        finalita = request.form.get("finalita", "")
 
-        logging.debug(f"DEBUG: username='{username}', password='{password}', conferma_password='{conferma_password}', email='{email}'")
-
-        # Controlli di base sui campi obbligatori
         if not username or not password or not conferma_password:
             flash("Username, password e conferma password sono obbligatori.")
             return redirect(request.url)
@@ -897,11 +910,10 @@ def register():
             flash("Le password non corrispondono.")
             return redirect(request.url)
 
-        if not nome or not cognome or not sesso or not eta or not peso_iniziale or not altezza or not email:
-            flash("Compila tutti i campi obbligatori, inclusa l'email.")
+        if not nome or not cognome or not sesso or not eta or not peso_iniziale or not altezza or not email or not finalita:
+            flash("Compila tutti i campi obbligatori, inclusa la finalità.")
             return redirect(request.url)
 
-        # Validazione base formato email (puoi usare regex più complesse se vuoi)
         if "@" not in email or "." not in email:
             flash("Inserisci un indirizzo email valido.")
             return redirect(request.url)
@@ -930,7 +942,8 @@ def register():
             "sesso": sesso,
             "eta": eta,
             "peso_iniziale": peso_iniziale,
-            "altezza": altezza
+            "altezza": altezza,
+            "finalita": finalita
         }
 
         save_users(users)
@@ -938,6 +951,7 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("register.html")
+
 
 
 @app.route("/profilo", methods=["GET", "POST"])
@@ -959,11 +973,11 @@ def profilo():
         peso_iniziale = request.form.get("peso_iniziale", "").strip()
         altezza = request.form.get("altezza", "").strip()
         email = request.form.get("email", "").strip()
+        finalita = request.form.get("finalita", "").strip()
 
         nuova_password = request.form.get("password", "").strip()
         conferma_password = request.form.get("conferma_password", "").strip()
 
-        # Validazioni base
         if nuova_password:
             if nuova_password != conferma_password:
                 flash("Le password non coincidono.")
@@ -971,8 +985,8 @@ def profilo():
             else:
                 user["password"] = generate_password_hash(nuova_password)
 
-        if not nome or not cognome or sesso not in ["M", "F", "O"] or not email:
-            flash("Compila tutti i campi correttamente, compresa l'email.")
+        if not nome or not cognome or sesso not in ["M", "F", "O"] or not email or not finalita:
+            flash("Compila tutti i campi correttamente, compresa la finalità.")
             return redirect(request.url)
 
         if "@" not in email or "." not in email:
@@ -987,7 +1001,6 @@ def profilo():
             flash("Età, peso e altezza devono essere numeri validi.")
             return redirect(request.url)
 
-        # Aggiorna dati utente
         user.update({
             "nome": nome,
             "cognome": cognome,
@@ -995,7 +1008,8 @@ def profilo():
             "eta": eta,
             "peso_iniziale": peso_iniziale,
             "altezza": altezza,
-            "email": email
+            "email": email,
+            "finalita": finalita
         })
 
         users[username] = user
@@ -1006,6 +1020,7 @@ def profilo():
         return redirect(url_for("profilo"))
 
     return render_template("profilo.html", user=user)
+
 
 
 @app.route("/cancella_account", methods=["POST"])
@@ -1047,6 +1062,30 @@ def elimina_utente(username):
     else:
         flash("Utente non trovato.")
     return redirect(url_for("admin_utenti"))
+
+@app.route("/forza_finalita")
+@login_required
+def forza_finalita():
+    path = "data/users.json"  # Modifica se hai un path diverso
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            utenti = json.load(f)
+
+        modificato = False
+        for username, dati in utenti.items():
+            if "finalita" not in dati:
+                dati["finalita"] = "Perdita di peso"
+                modificato = True
+
+        if modificato:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(utenti, f, indent=2, ensure_ascii=False)
+            return "Campo 'finalita' aggiunto a chi non ce l'ha."
+        else:
+            return "Tutti gli utenti hanno già il campo 'finalita'."
+    except Exception as e:
+        return f"Errore: {e}"
+
 
 # ======================
 # Avvio app

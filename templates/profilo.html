@@ -30,6 +30,16 @@
     </select>
   </label>
 
+  <label class="block">
+    <span class="text-gray-700 font-medium">Finalità (obiettivo):</span>
+    <select name="finalita" class="mt-1 w-full border rounded p-2">
+      <option value="" {% if not user.finalita %}selected{% endif %}>Seleziona obiettivo</option>
+      <option value="Perdita di peso" {% if user.finalita == 'Perdita di peso' %}selected{% endif %}>Perdita di peso</option>
+      <option value="Aumento massa muscolare" {% if user.finalita == 'Aumento massa muscolare' %}selected{% endif %}>Aumento massa muscolare</option>
+      <option value="Definizione corporea" {% if user.finalita == 'Definizione corporea' %}selected{% endif %}>Definizione corporea</option>
+    </select>
+  </label>
+
   <hr class="my-4">
 
   <label class="block">
