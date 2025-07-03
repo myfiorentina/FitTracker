@@ -15,6 +15,7 @@ PASTI_FILE = "/data/pasti.json"
 PESATE_FILE = "/data/pesate.json"
 
 DATA_PATH = "/data"
+GEMINI_API_KEY = "AIzaSyAJ_U8NMEJAr7sk24uqjzJdOrxD9meFMr0"
 
 # Configurazioni Flask e logging
 app = Flask(__name__)
@@ -134,12 +135,28 @@ def admin_required(f):
 # Route di base
 # ======================
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        # ⚠️ Autenticazione semplificata (da adattare se hai un sistema utenti)
+        if username:  # puoi mettere anche una condizione più restrittiva
+            session["username"] = username
+            flash("Accesso effettuato con successo.")
+            return redirect(url_for("home"))
+        else:
+            flash("Credenziali non valide.")
+
+    return render_template("login.html")
+
+
 @app.route("/")
 @login_required
 def home():
     username = session["username"]
     ultimo_pasto = None
-
     try:
         with open(PASTI_FILE, "r", encoding="utf-8") as f:
             righe = f.readlines()
@@ -701,6 +718,7 @@ def analisi_pasti():
 
     # Chiamata a Gemini
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(gemini_url, json=payload)
 
@@ -780,6 +798,7 @@ def analisi_pesature():
     )
 
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(gemini_url, json=payload)
 
