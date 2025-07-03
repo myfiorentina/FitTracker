@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="text-2xl font-semibold text-center mb-6">✏️ Modifica Feedback</h2>
+
+<div class="max-w-xl mx-auto bg-white shadow rounded-lg p-6">
+  <form action="{{ url_for('feedback_modifica', feedback_id=feedback.id) }}" method="POST" class="space-y-6">
+    
+    <!-- Utente e data -->
+    <div>
+      <p class="text-sm text-gray-600">
+        👤 <strong>{{ feedback.utente }}</strong> - 🕒 {{ feedback.data_ora }}
+      </p>
+    </div>
+
+    <!-- Contenuto del feedback -->
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Contenuto del Feedback</label>
+      <textarea name="contenuto" rows="4" class="w-full border rounded p-2 focus:outline-none focus:ring"
+                required>{{ feedback.contenuto }}</textarea>
+    </div>
+
+    <!-- Risposta dell'admin -->
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Risposta dell'Amministratore</label>
+      <textarea name="risposta" rows="3" class="w-full border rounded p-2 focus:outline-none focus:ring"
+                placeholder="Scrivi una risposta per l'utente (facoltativa)...">{{ feedback.risposta or '' }}</textarea>
+    </div>
+
+    <!-- Pulsanti -->
+    <div class="flex justify-between items-center">
+      <a href="{{ url_for('feedback_admin') }}"
+         class="text-gray-600 hover:underline">← Torna alla lista</a>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Salva modifiche
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

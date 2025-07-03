@@ -1113,6 +1113,74 @@ def feedback_admin():
 
     return render_template("feedback_admin.html", feedback_list=feedback_list)
 
+@app.route("/feedback_modifica/<feedback_id>", methods=["GET", "POST"])
+@login_required
+def feedback_modifica(feedback_id):
+    if session.get("username") != "myfiorentina":
+        flash("Accesso riservato all'amministratore.")
+        return redirect(url_for("home"))
+
+    feedback_list = []
+    trovato = None
+
+    with open("data/feedback.jsonl", "r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                fb = json.loads(line)
+                if fb["id"] == feedback_id:
+                    trovato = fb
+                feedback_list.append(fb)
+
+    if not trovato:
+        flash("Feedback non trovato.")
+        return redirect(url_for("feedback_admin"))
+
+    if request.method == "POST":
+        nuova_risposta = request.form.get("risposta", "").strip()
+        nuovo_testo = request.form.get("contenuto", "").strip()
+
+        if not nuovo_testo:
+            flash("Il contenuto non può essere vuoto.")
+            return redirect(request.url)
+
+        trovato["contenuto"] = nuovo_testo
+        trovato["risposta"] = nuova_risposta
+
+        # Sovrascrivi tutto
+        with open("data/feedback.jsonl", "w", encoding="utf-8") as f:
+            for fb in feedback_list:
+                if fb["id"] == feedback_id:
+                    f.write(json.dumps(trovato) + "\n")
+                else:
+                    f.write(json.dumps(fb) + "\n")
+
+        flash("Feedback aggiornato con successo.")
+        return redirect(url_for("feedback_admin"))
+
+    return render_template("modifica_feedback.html", feedback=trovato)
+
+@app.route("/feedback_elimina/<feedback_id>", methods=["POST"])
+@login_required
+def feedback_elimina(feedback_id):
+    if session.get("username") != "myfiorentina":
+        flash("Accesso riservato all'amministratore.")
+        return redirect(url_for("home"))
+
+    feedback_list = []
+    with open("data/feedback.jsonl", "r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                fb = json.loads(line)
+                if fb["id"] != feedback_id:
+                    feedback_list.append(fb)
+
+    with open("data/feedback.jsonl", "w", encoding="utf-8") as f:
+        for fb in feedback_list:
+            f.write(json.dumps(fb) + "\n")
+
+    flash("Feedback eliminato.")
+    return redirect(url_for("feedback_admin"))
+
 
 # ======================
 # Avvio app
